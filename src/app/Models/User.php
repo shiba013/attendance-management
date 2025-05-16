@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'email_verified_at',
+        'role',
     ];
 
     /**
@@ -41,4 +43,24 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function works()
+    {
+        return $this->hasMany(Work::class);
+    }
+
+    public function rests()
+    {
+        return $this->hasMany(Rest::class);
+    }
+
+    public function workRequests()
+    {
+        return $this->hasMany(WorkRequest::class);
+    }
+
+    public function reviewedUsers()
+    {
+        return $this->hasMany(WorkRequest::class, 'reviewed_by_user_id');
+    }
 }
