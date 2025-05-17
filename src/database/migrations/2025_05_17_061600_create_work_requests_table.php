@@ -22,7 +22,7 @@ class CreateWorkRequestsTable extends Migration
             $table->text('remarks');
             $table->dateTime('requested_rests_start')->nullable();
             $table->dateTime('requested_rests_end')->nullable();
-            $table->foreignId('reviewed_by_user_id')->constrained()->cascadeOnDelete()->nullable();
+            $table->foreignId('reviewed_by_user_id')->constrained('users')->cascadeOnDelete()->nullable();
             $table->dateTime('reviewed_at')->nullable();
             $table->boolean('status')->default(false);
             $table->timestamps();
