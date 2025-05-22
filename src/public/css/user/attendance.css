@@ -1,0 +1,69 @@
+.content {
+    height: 100vh;
+    background-color: rgba(240, 239, 242, 1);
+}
+
+.attendance-form {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 75%;
+}
+
+.attendance__category {
+    padding: 15px 25px;
+    margin: 0px auto;
+    width: fit-content;
+    border-radius: 50px;
+    background-color: rgba(200, 200, 200, 1);
+    font-size: 18px;
+    color: rgba(105, 105, 105, 1);
+}
+
+.attendance__date {
+    margin: 30px auto;
+    text-align: center;
+    font-size: 40px;
+    font-weight: 400;
+}
+
+.attendance__time {
+    margin: 30px auto;
+    text-align: center;
+    font-size: 80px;
+}
+
+.work__button,
+.done__button,
+.rest__button,
+.rested__button {
+    width: 200px;
+    padding: 15px 25px;
+    margin: 50px auto;
+    display: block;
+    border: none;
+    border-radius: 20px;
+    background-color: rgba(0, 0, 0, 1);
+    font-size: 32px;
+    color: rgba(255, 255, 255, 1);
+}
+
+.form__button {
+    margin: 0px auto;
+    width: 500px;
+    display: flex;
+}
+
+.rest__button,
+.rested__button {
+    background-color: rgba(255, 255, 255, 1);
+    color: rgba(0, 0, 0, 1);
+}
+
+.done__message {
+    margin: 50px auto;
+    text-align: center;
+    font-size: 26px;
+    letter-spacing: 5px;
+}

@@ -1,0 +1,40 @@
+.content {
+    padding: 150px 20px;
+    margin: 0px auto;
+}
+
+.verify-email {
+    text-align: center;
+    margin: 20px auto 60px;
+    font-size: 24px;
+}
+
+.verify-email__group {
+    margin: 30px auto;
+    text-align: center;
+}
+
+.auth {
+    border: 1px solid rgba(0, 0, 0, 1);
+    border-radius: 10px;
+    padding: 10px;
+    width: 250px;
+    height: 60px;
+    background-color: rgba(217, 217, 217, 1);
+}
+
+.auth__button {
+    text-decoration: none;
+    color: rgba(0, 0, 0, 1);
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.resend-form__link {
+    padding: 20px 0px;
+    background: none;
+    border: none;
+    color: rgba(0, 115, 204, 1);
+    font-size: 20px;
+    font-weight: 400;
+}
