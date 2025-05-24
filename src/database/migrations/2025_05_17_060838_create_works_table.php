@@ -19,7 +19,7 @@ class CreateWorksTable extends Migration
             $table->date('date');
             $table->dateTime('start_time')->nullable();
             $table->dateTime('end_time')->nullable();
-            $table->enum('status', ['off', 'working', 'rest', 'done']);
+            $table->tinyInteger('status')->comment('0:勤務外, 1:勤務中, 2:休憩開始, 3:休憩終了');
             $table->timestamps();
         });
     }

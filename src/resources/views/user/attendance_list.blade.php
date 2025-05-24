@@ -34,16 +34,18 @@
                 <th class="table__label">合計</th>
                 <th class="table__label">詳細</th>
             </tr>
+            @foreach($works as $work)
             <tr class="data__row">
-                <td class="table__data"></td>
-                <td class="table__data"></td>
-                <td class="table__data"></td>
-                <td class="table__data"></td>
-                <td class="table__data"></td>
+                <td class="table__data">{{ $work->date->translatedFormat('Y年m月d日(D)') }}</td>
+                <td class="table__data">{{ $work->start_time->format('H:i') }}</td>
+                <td class="table__data">{{ $work->end_time->format('H:i') }}</td>
+                <td class="table__data">{{ $work->totalRestTimeFormat() }}</td>
+                <td class="table__data">{{ $work->totalWorkTimeFormat() }}</td>
                 <td class="table__data">
-                    <a href="" class="data__link">詳細</a>
+                    <a href="/attendance/{{ $work->id }}" class="data__link">詳細</a>
                 </td>
             </tr>
+            @endforeach
         </table>
     </div>
 </div>

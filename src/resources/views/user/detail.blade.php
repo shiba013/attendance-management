@@ -16,36 +16,34 @@
             <div class="edit-form__table">
                 <section class="edit-form__group">
                     <label for="" class="edit-form__label">名前</label>
-                    <p class="edit-form__p">ユーザだよ</p>
+                    <p class="edit-form__p">{{ Auth::user()->name }}</p>
                     <input type="hidden" name="" value="">
                 </section>
                 <section class="edit-form__group">
                     <label for="" class="edit-form__label">日付</label>
-                    <p class="edit-form__p">2025年</p>
-                    <p class="edit-form__p">5月22日</p>
+                    <p class="edit-form__p">{{ $work->date->translatedFormat('Y年') }}</p>
+                    <p class="edit-form__p">{{ $work->date->translatedFormat('m月d日') }}</p>
                     <input type="hidden" name="" value="">
                 </section>
                 <section class="edit-form__group">
                     <label for="" class="edit-form__label">出勤・退勤</label>
-                    <input type="time" name="" value="" class="edit-form__input">
+                    <input type="time" name="start_work" value="{{ $work->start_time->format('H:i') }}" class="edit-form__input">
                     <span class="edit-form__span">〜</span>
-                    <input type="time" name="" value="" class="edit-form__input">
+                    <input type="time" name="end_work" value="{{ $work->end_time->format('H:i') }}" class="edit-form__input">
                 </section>
+                @foreach($work->rests as $rest)
                 <section class="edit-form__group">
-                    <label for="" class="edit-form__label">休憩</label>
-                    <input type="time" name="" value="" class="edit-form__input">
+                    <label for="" class="edit-form__label">
+                        {{ $loop->first ? '休憩' : '休憩' . $loop->iteration }}
+                    </label>
+                    <input type="time" name="start_rest[]" value="{{ optional($rest->start_time)->format('H:i') }}" class="edit-form__input">
                     <span class="edit-form__span">〜</span>
-                    <input type="time" name="" value="" class="edit-form__input">
+                    <input type="time" name="end_rest[]" value="{{ optional($rest->end_time)->format('H:i') }}" class="edit-form__input">
                 </section>
-                <section class="edit-form__group">
-                    <label for="" class="edit-form__label">休憩2</label>
-                    <input type="time" name="" value="" class="edit-form__input">
-                    <span class="edit-form__span">〜</span>
-                    <input type="time" name="" value="" class="edit-form__input">
-                </section>
+                @endforeach
                 <section class="edit-form__group">
                     <label for="" class="edit-form__label">備考</label>
-                    <textarea name="" class="edit-form__text"></textarea>
+                    <textarea name="remarks" class="edit-form__text"></textarea>
                 </section>
             </div>
             <div class="edit-form__submit">

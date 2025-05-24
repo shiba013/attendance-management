@@ -43,12 +43,12 @@
             <div class="register-form__group">
                 <label for="password_confirmation" class="register-form__label">パスワード確認</label>
                 <input type="password" name="password_confirmation" id="password_confirmation" class="register-form__input" value="{{ old('password_confirmation') }}">
+                <p class="alert">
+                    @error('password_confirmation')
+                    {{ $message }}
+                    @enderror
+                </p>
             </div>
-            <p class="alert">
-                @error('password_confirmation')
-                {{ $message }}
-                @enderror
-            </p>
             <div class="register-form__group">
                 <input type="submit" value="登録する" class="register__button">
             </div>

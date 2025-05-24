@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Work extends Model
 {
@@ -36,5 +37,38 @@ class Work extends Model
     public function workRequests()
     {
         return $this->hasMany(WorkRequest::class);
+    }
+
+    public function totalRestTime(): int
+    {
+        return $this->rests
+        ->whereNotNull('start_time')
+        ->whereNotNull('end_time')
+        ->sum(function ($rest) {
+            $start = Carbon::parse($rest->start_time)->copy()->second(0);
+            $end = Carbon::parse($rest->end_time)->copy()->second(0);
+            return $end->diffInMinutes($start);
+        });
+    }
+
+    public function totalWorkTime(): int
+    {
+        if (!$this->start_time || !$this->end_time) {
+            return 0;
+        }
+        $start = Carbon::parse($this->start_time)->copy()->second(0);
+        $end = Carbon::parse($this->end_time)->copy()->second(0);
+        $workMinutes = $end->diffInMinutes($start);
+        return $workMinutes - $this->totalRestTime();
+    }
+
+    public function totalRestTimeFormat(): string
+    {
+        return gmdate('H:i', $this->totalRestTime()  * 60);
+    }
+
+    public function totalWorkTimeFormat(): string
+    {
+        return gmdate('H:i', $this->totalWorkTime()  * 60);
     }
 }

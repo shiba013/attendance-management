@@ -21,37 +21,35 @@
 
                 <nav class="nav">
                     <ul class="nav-form">
-                        {{--@auth--}}
-                            {{--@if(Auth::check()->role === 1)--}}
+                        @auth
+                            @if(auth()->check() && auth()->user()->role === 0)
                             <li class="nav__items">
-                                <a href="" class="nav__button">勤怠一覧</a>
+                                <a href="/attendance" class="nav__button">勤怠</a>
                             </li>
                             <li class="nav__items">
-                                <a href="" class="nav__button">スタッフ一覧</a>
+                                <a href="/attendance/list" class="nav__button">勤怠一覧</a>
                             </li>
                             <li class="nav__items">
-                                <a href="" class="nav__button">申請一覧</a>
+                                <a href="/stamp_correction_request/list" class="nav__button">申請</a>
                             </li>
-                        <!--
-                            {{--@elseif(Auth::check()->role === 0)--}}
+                            @elseif(auth()->check() && auth()->user()->role === 1)
                             <li class="nav__items">
-                                <a href="" class="nav__button">勤怠</a>
-                            </li>
-                            <li class="nav__items">
-                                <a href="" class="nav__button">勤怠一覧</a>
+                                <a href="/admin/attendance/list" class="nav__button">勤怠一覧</a>
                             </li>
                             <li class="nav__items">
-                                <a href="" class="nav__button">申請</a>
+                                <a href="/admin/staff/list" class="nav__button">スタッフ一覧</a>
                             </li>
-                            {{--@endif--}}
-                        -->
-                        <li class="nav__items">
-                            <form action="/logout" method="post">
-                                @csrf
-                                <input type="submit" value="ログアウト" class="nav__button">
-                            </form>
-                        </li>
-                        {{--@endauth--}}
+                            <li class="nav__items">
+                                <a href="/stamp_correction_request/list" class="nav__button">申請一覧</a>
+                            </li>
+                            @endif
+                            <li class="nav__items">
+                                <form action="/logout" method="post">
+                                    @csrf
+                                    <input type="submit" value="ログアウト" class="nav__button">
+                                </form>
+                            </li>
+                        @endauth
                     </ul>
                 </nav>
             </div>

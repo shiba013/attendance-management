@@ -17,11 +17,7 @@ class CreateWorkRequestsTable extends Migration
             $table->id();
             $table->foreignId('work_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->dateTime('requested_start')->nullable();
-            $table->dateTime('requested_end')->nullable();
             $table->text('remarks');
-            $table->dateTime('requested_rests_start')->nullable();
-            $table->dateTime('requested_rests_end')->nullable();
             $table->foreignId('reviewed_by_user_id')->constrained('users')->cascadeOnDelete()->nullable();
             $table->dateTime('reviewed_at')->nullable();
             $table->boolean('status')->default(false);

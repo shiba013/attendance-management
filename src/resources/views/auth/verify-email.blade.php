@@ -11,8 +11,16 @@
         メール認証を完了してください。
     </h2>
     <div class="verify-email__group">
+        @php
+        // 認証URLを生成（これは実際にはメールに入るURLと同じ）
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => auth()->user()->id, 'hash' => sha1(auth()->user()->email)]
+        );
+        @endphp
         <button class="auth">
-            <a href="{{-- $verificationUrl --}}" class="auth__button">認証はこちらから</a>
+            <a href="{{ $verificationUrl }}" class="auth__button">認証はこちらから</a>
         </button>
     </div>
     <div class="verify-email__group">

@@ -12,22 +12,10 @@ class WorkRequest extends Model
     protected $fillable = [
         'work_id',
         'user_id',
-        'requested_start',
-        'requested_end',
         'remarks',
-        'requested_rests_start',
-        'requested_rests_end',
         'reviewed_by_user_id',
         'reviewed_at',
         'status',
-    ];
-
-    protected $casts = [
-        'requested_start' => 'datetime',
-        'requested_end' => 'datetime',
-        'requested_rests_start' => 'datetime',
-        'requested_rests_end' => 'datetime',
-        'reviewed_at' => 'datetime',
     ];
 
     public function user()
@@ -43,5 +31,10 @@ class WorkRequest extends Model
     public function reviewer()
     {
         return $this->belongsTo(WorkRequest::class, 'reviewed_by_user_id');
+    }
+
+    public function times()
+    {
+        return $this->hasMany(WorkRequestTime::class);
     }
 }
