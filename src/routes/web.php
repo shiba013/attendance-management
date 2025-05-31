@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CommonController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -25,14 +28,24 @@ Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verification'])
 Route::post('/email/verify/resend', [AuthController::class ,'resend'])
 ->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
-Route::get('/login', [AuthController::class, 'login'])->name('login');
+Route::get('/login', [AuthController::class, 'user'])->name('login');
 Route::post('/login', [AuthController::class, 'loginUser']);
+Route::get('/admin/login', [AuthController::class, 'admin'])->name('admin.login');;
+Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
+
+Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 
 Route::middleware('auth', 'verified')->group(function ()
 {
     Route::get('/attendance', [UserController::class, 'index']);
     Route::post('/attendance', [UserController::class, 'stamping']);
-    Route::get('/attendance/list', [UserController::class, 'list']);
-    Route::get('/attendance/{id}', [UserController::class, 'detail']);
-    Route::get('/stamp_correction_request/list', [UserController::class, 'request']);
+    Route::get('/attendance/list', [UserController::class, 'attendanceList']);
+    Route::get('/stamp_correction_request/list', [UserController::class, 'requestList']);
+
+    Route::get('/attendance/{id}', [CommonController::class, 'detail']);
+    Route::patch('/attendance/{id}', [CommonController::class, 'update']);
+
+    Route::get('/admin/attendance/list', [AdminController::class, 'index']);
+    Route::get('/admin/staff/list', [AdminController::class, 'staff']);
+    Route::get('/admin/attendance/staff/{id}', [AdminController::class, 'private']);
 });

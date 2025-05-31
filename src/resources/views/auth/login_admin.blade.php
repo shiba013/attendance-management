@@ -8,7 +8,7 @@
 <div class="content">
     <h1 class="login__title">管理者ログイン</h1>
     <div class="login__inner">
-        <form action="/login" method="post" class="login-form">
+        <form action="/admin/login" method="post" class="login-form">
             @csrf
             <div class="login-form__group">
                 <label for="email" class="login-form__label">メールアドレス</label>

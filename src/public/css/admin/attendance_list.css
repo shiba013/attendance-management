@@ -1,4 +1,4 @@
-.content {
+body {
     background-color: rgba(240, 239, 242, 1);
 }
 
@@ -45,29 +45,33 @@
 }
 
 .date__search-form {
-    width: 200px;
+    width: 250px;
+    display: flex;
+    justify-content: space-between;
+    text-align: center;
     position: relative;
 }
 
 .calendar__label {
     font-size: 20px;
     display: flex;
+    justify-content: center;
     align-items: center;
     gap: 5px;
+    cursor: pointer;
 }
 
 .calendar__img {
     width: 25px;
     height: 25px;
-    cursor: pointer;
 }
 
 .calendar__input {
     position: absolute;
     top: 0;
-    left: 0;
-    width: 190px;
-    height: 30px;
+    left: -5%;
+    width: 70%;
+    height: 110%;
     opacity: 0;
     cursor: pointer;
 }
@@ -78,6 +82,16 @@ input[type=date]::-webkit-calendar-picker-indicator {
     height: 100%;
     opacity: 0;
     transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.calendar__submit {
+    padding: 3px 8px;
+    border: 1px solid rgba(115, 115, 115, 1);
+    border-radius: 4px;
+    color: rgba(0, 0, 0, 1);
+    background-color: rgba(255, 255, 255, 1);
+    cursor: pointer;
 }
 
 .right-arrow__img {

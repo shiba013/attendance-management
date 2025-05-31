@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\UpdateRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Work;
@@ -83,27 +84,40 @@ class UserController extends Controller
         return redirect('/attendance');
     }
 
-    public function list()
+    public function attendanceList(Request $request)
     {
         $user = Auth::user();
+
+        $inputMonth = $request->input('date');
+        $thisMonth = $inputMonth
+        ? Carbon::parse($inputMonth)->startOfMonth()
+        : now()->startOfMonth();
+
+        $previousMonth = $thisMonth->copy()->subMonth()->format('Y-m');
+        $nextMonth = $thisMonth->copy()->addMonth()->format('Y-m');
+
         $works = Work::with('rests')
         ->where('user_id', $user->id)
+        ->whereBetween('date', [
+            $thisMonth->copy()->startOfMonth(),
+            $thisMonth->copy()->endOfMonth(),
+        ])
         ->orderBy('date', 'asc')->get();
-        return view('user.attendance_list', compact('user', 'works'));
+
+        return view('user.attendance_list', compact('user', 'thisMonth', 'previousMonth', 'nextMonth', 'works'));
     }
 
-    public function detail($workId)
+    public function requestList(Request $request)
     {
         $user = Auth::user();
-        $work = Work::with('rests')
-        ->where('user_id', $user->id)
-        ->where('id', $workId)
-        ->firstOrFail();
-        return view('user.detail', compact('user', 'work'));
-    }
-
-    public function request()
-    {
-        return view('request_list');
+        $query = WorkRequest::with('user', 'work', 'times');
+        $tab = $request->query('tab');
+        if ($tab == 'done') {
+            $query->where('status', 1);
+        } elseif($tab == '') {
+            $query->where('status', 0);
+        }
+        $corrections = $query->get();
+        return view('request_list', compact('corrections', 'tab'));
     }
 }

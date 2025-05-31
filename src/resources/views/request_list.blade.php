@@ -10,15 +10,15 @@
         <h1 class="request-list__title">申請一覧</h1>
     </div>
     <div class="request-list__tab">
-        <input type="radio" name="tab" id="wait" {{-- $tab == '' ? 'checked' : '' --}}>
+        <input type="radio" name="tab" id="wait" {{ $tab == '' ? 'checked' : '' }}>
         <label for="wait" class="tab__label">
-            <a href="/stamp_correction_request/approve" class="tab__link">承認待ち</a>
+            <a href="/stamp_correction_request/list" class="tab__link">承認待ち</a>
         </label>
 
         <input type="radio" name="tab" id="done"
-        {{-- $tab == 'attendance_correct_request' ? 'checked' : '' --}}>
+        {{ $tab == 'done' ? 'checked' : '' }}>
         <label for="done" class="tab__label">
-            <a href="/stamp_correction_request/approve/{attendance_correct_request}" class="tab__link">承認済み</a>
+            <a href="/stamp_correction_request/list/?tab=done" class="tab__link">承認済み</a>
         </label>
     </div>
     <div class="request-list">
@@ -31,16 +31,24 @@
                 <th class="table__label">申請日時</th>
                 <th class="table__label">詳細</th>
             </tr>
+            @foreach($corrections as $correction)
             <tr class="data__row">
-                <td class="table__data">承認待ち</td>
-                <td class="table__data">申請太郎</td>
-                <td class="table__data">2025/05/01</td>
-                <td class="table__data">遅延のため</td>
-                <td class="table__data">20205/05/05</td>
                 <td class="table__data">
-                    <a href="" class="data__link">詳細</a>
+                    @if ($correction->status === 0)
+                    承認待ち
+                    @elseif ($correction->status === 1)
+                    承認済み
+                    @endif
+                </td>
+                <td class="table__data">{{ $correction->user->name }}</td>
+                <td class="table__data">{{ $correction->work->date->translatedFormat('Y年m月d日')  }}</td>
+                <td class="table__data">{{ $correction->remarks }}</td>
+                <td class="table__data">{{ $correction->created_at->translatedFormat('Y年m月d日') }}</td>
+                <td class="table__data">
+                    <a href="/attendance/{{ $correction->work_id }}" class="data__link">詳細</a>
                 </td>
             </tr>
+            @endforeach
         </table>
     </div>
 </div>

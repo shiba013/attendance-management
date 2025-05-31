@@ -22,7 +22,7 @@
                 <nav class="nav">
                     <ul class="nav-form">
                         @auth
-                            @if(auth()->check() && auth()->user()->role === 0)
+                            @if(session('login_type') === 'user')
                             <li class="nav__items">
                                 <a href="/attendance" class="nav__button">勤怠</a>
                             </li>
@@ -32,7 +32,7 @@
                             <li class="nav__items">
                                 <a href="/stamp_correction_request/list" class="nav__button">申請</a>
                             </li>
-                            @elseif(auth()->check() && auth()->user()->role === 1)
+                            @elseif(session('login_type') === 'admin')
                             <li class="nav__items">
                                 <a href="/admin/attendance/list" class="nav__button">勤怠一覧</a>
                             </li>

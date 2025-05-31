@@ -16,13 +16,15 @@
                 <th class="table__label">メールアドレス</th>
                 <th class="table__label">月次勤怠</th>
             </tr>
+            @foreach($users as $user)
             <tr class="data__row">
-                <td class="table__data"></td>
-                <td class="table__data"></td>
+                <td class="table__data">{{ $user->name }}</td>
+                <td class="table__data">{{ $user->email }}</td>
                 <td class="table__data">
-                    <a href="" class="data__link">詳細</a>
+                    <a href="/admin/attendance/staff/{{ $user->id }}" class="data__link">詳細</a>
                 </td>
             </tr>
+            @endforeach
         </table>
     </div>
 </div>
