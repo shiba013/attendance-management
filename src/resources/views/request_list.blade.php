@@ -45,7 +45,11 @@
                 <td class="table__data">{{ $correction->remarks }}</td>
                 <td class="table__data">{{ $correction->created_at->translatedFormat('Y年m月d日') }}</td>
                 <td class="table__data">
+                    @if(session('login_type') === 'user')
                     <a href="/attendance/{{ $correction->work_id }}" class="data__link">詳細</a>
+                    @elseif(session('login_type') === 'admin')
+                    <a href="/stamp_correction_request/approve/{{ $correction->id }}" class="data__link">詳細</a>
+                    @endif
                 </td>
             </tr>
             @endforeach

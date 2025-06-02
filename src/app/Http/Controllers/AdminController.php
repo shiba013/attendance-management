@@ -56,4 +56,12 @@ class AdminController extends Controller
         ->orderBy('date', 'asc')->get();
         return view('admin.private_list', compact('user', 'thisMonth', 'previousMonth', 'nextMonth', 'works'));
     }
+
+    public function approve($workRequestId)
+    {
+        $workRequest = WorkRequest::with('user', 'work', 'times')
+        ->where('id', $workRequestId)
+        ->first();
+        return view('admin.approval');
+    }
 }

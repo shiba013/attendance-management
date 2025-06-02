@@ -18,20 +18,11 @@ use App\Http\Controllers\CommonController;
 |
 */
 
-Route::get('/register', [AuthController::class, 'register']);
-Route::post('/register' , [AuthController::class, 'createUser']);
-
-Route::get('/email/verify', [AuthController::class ,'email'])
-->middleware('auth')->name('verification.notice');
-Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verification'])
-->middleware('auth', 'signed')->name('verification.verify');
-Route::post('/email/verify/resend', [AuthController::class ,'resend'])
-->middleware(['auth', 'throttle:6,1'])->name('verification.send');
-
-Route::get('/login', [AuthController::class, 'user'])->name('login');
-Route::post('/login', [AuthController::class, 'loginUser']);
-Route::get('/admin/login', [AuthController::class, 'admin'])->name('admin.login');;
-Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
+Route::middleware('role:1')->group(function ()
+{
+    Route::get('/admin/login', [AuthController::class, 'admin']);
+    Route::post('/admin/login' , [AuthController::class, 'loginAdmin']);
+});
 
 Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
 
@@ -44,8 +35,12 @@ Route::middleware('auth', 'verified')->group(function ()
 
     Route::get('/attendance/{id}', [CommonController::class, 'detail']);
     Route::patch('/attendance/{id}', [CommonController::class, 'update']);
+});
 
+Route::middleware('auth', 'verified', 'role:1')->group(function ()
+{
     Route::get('/admin/attendance/list', [AdminController::class, 'index']);
     Route::get('/admin/staff/list', [AdminController::class, 'staff']);
     Route::get('/admin/attendance/staff/{id}', [AdminController::class, 'private']);
+    Route::get('/stamp_correction_request/approve/{attendance_correct_request}', [AdminController::class, 'approve']);
 });
