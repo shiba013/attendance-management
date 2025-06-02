@@ -17,6 +17,11 @@ class workRequestTime extends Model
         'after_time',
     ];
 
+    protected $casts = [
+        'before_time' => 'datetime',
+        'after_time' => 'datetime',
+    ];
+
     public function rest()
     {
         return $this->belongsTo(Rest::class);

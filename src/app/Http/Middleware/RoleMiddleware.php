@@ -5,6 +5,8 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
 
 class RoleMiddleware
 {
@@ -28,9 +30,6 @@ class RoleMiddleware
             abort(403, 'アクセス権がありません');
         }
 
-        if($user->role === 0 && $path === '/admin/login') {
-            return back()->withErrors(['管理者ユーザとしての権限が必要です']);
-        }
         return $next($request);
     }
 }

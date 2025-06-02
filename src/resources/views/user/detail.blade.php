@@ -11,7 +11,6 @@
     </div>
     <div class="edit">
         <form action="/attendance/{{ $work->id }}" method="post" class="edit-form">
-            @method('patch')
             @csrf
             <div class="edit-form__table">
                 <section class="edit-form__group">
@@ -25,9 +24,11 @@
                 </section>
                 <section class="edit-form__group">
                     <label for="" class="edit-form__label">出勤・退勤</label>
-                    <input type="time" name="start_work" value="{{ old('start_work', optional($work->start_time)->format('H:i')) ?? '' }}" class="edit-form__input">
+                    <input type="time" name="start_work" class="edit-form__input"
+                    value="{{ old('start_work', optional($work->start_time)->format('H:i')) ?? '' }}">
                     <span class="edit-form__span">〜</span>
-                    <input type="time" name="end_work" value="{{ old('end_work', optional($work->end_time)->format('H:i')) ?? '' }}" class="edit-form__input">
+                    <input type="time" name="end_work" class="edit-form__input"
+                    value="{{ old('end_work', optional($work->end_time)->format('H:i')) ?? '' }}">
                     <p class="alert">
                         @error('end_work')
                         {{ $message }}
@@ -39,9 +40,11 @@
                     <label for="" class="edit-form__label">
                     {{ $loop->first ? '休憩' : '休憩' . $loop->iteration }}
                     </label>
-                    <input type="time" name="start_rest[]" value="{{ old("start_rest.$index", optional($rest->start_time)->format('H:i')) ?? '' }}" class="edit-form__input">
+                    <input type="time" name="start_rest[]" class="edit-form__input"
+                    value="{{ old("start_rest.$index", optional($rest->start_time)->format('H:i')) ?? '' }}">
                     <span class="edit-form__span">〜</span>
-                    <input type="time" name="end_rest[]" value="{{ old("end_rest.$index", optional($rest->end_time)->format('H:i')) ?? '' }}" class="edit-form__input">
+                    <input type="time" name="end_rest[]" class="edit-form__input"
+                    value="{{ old("end_rest.$index", optional($rest->end_time)->format('H:i')) ?? '' }}">
                     <p class="alert">
                         @error("start_rest.$index")
                         {{ $message }}
@@ -57,11 +60,13 @@
                     $lastIndex = $work->rests->count()
                     @endphp
                     <label for="" class="edit-form__label">
-                    休憩{{ $lastIndex + 1 }}
+                        休憩{{ $lastIndex + 1 }}
                     </label>
-                    <input type="time" name="start_rest[]" value="{{ old("start_rest.$lastIndex") }}" class="edit-form__input">
+                    <input type="time" name="start_rest[]" class="edit-form__input"
+                    value="{{ old("start_rest.$lastIndex") }}" >
                     <span class="edit-form__span">〜</span>
-                    <input type="time" name="end_rest[]" value="{{ old("end_rest.$lastIndex") }}" class="edit-form__input">
+                    <input type="time" name="end_rest[]" class="edit-form__input"
+                    value="{{ old("end_rest.$lastIndex") }}">
                     <p class="alert">
                         @error("start_rest.$lastIndex")
                         {{ $message }}

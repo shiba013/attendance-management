@@ -31,6 +31,7 @@
                 <th class="table__label">申請日時</th>
                 <th class="table__label">詳細</th>
             </tr>
+            @if(session('login_type') === 'user')
             @foreach($corrections as $correction)
             <tr class="data__row">
                 <td class="table__data">
@@ -45,14 +46,30 @@
                 <td class="table__data">{{ $correction->remarks }}</td>
                 <td class="table__data">{{ $correction->created_at->translatedFormat('Y年m月d日') }}</td>
                 <td class="table__data">
-                    @if(session('login_type') === 'user')
                     <a href="/attendance/{{ $correction->work_id }}" class="data__link">詳細</a>
-                    @elseif(session('login_type') === 'admin')
-                    <a href="/stamp_correction_request/approve/{{ $correction->id }}" class="data__link">詳細</a>
-                    @endif
                 </td>
             </tr>
             @endforeach
+            @elseif(session('login_type') === 'admin')
+            @foreach($corrections as $correction)
+            <tr class="data__row">
+                <td class="table__data">
+                    @if ($correction->status === 0)
+                    承認待ち
+                    @elseif ($correction->status === 1)
+                    承認済み
+                    @endif
+                </td>
+                <td class="table__data">{{ $correction->user->name }}</td>
+                <td class="table__data">{{ $correction->work->date->translatedFormat('Y年m月d日')  }}</td>
+                <td class="table__data">{{ $correction->remarks }}</td>
+                <td class="table__data">{{ $correction->created_at->translatedFormat('Y年m月d日') }}</td>
+                <td class="table__data">
+                    <a href="/stamp_correction_request/approve/{{ $correction->id }}" class="data__link">詳細</a>
+                </td>
+            </tr>
+            @endforeach
+            @endif
         </table>
     </div>
 </div>

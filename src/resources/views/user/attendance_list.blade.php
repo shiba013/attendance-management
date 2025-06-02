@@ -39,13 +39,17 @@
             @foreach($works as $work)
             <tr class="data__row">
                 <td class="table__data">
-                    {{ optional($work->date)->translatedFormat('m/d(D)') ?? '' }}
+                    {{ $work->date->translatedFormat('m/d(D)') }}
                 </td>
                 <td class="table__data">
-                    {{ optional($work->start_time)->format('H:i') ?? '' }}
+                    {{ (optional($time)->after_time && optional($workRequest)->reviewed_at)
+                        ? optional($time->after_time)->format('H:i')
+                        : optional($work->start_time)->format('H:i') ?? '' }}
                 </td>
                 <td class="table__data">
-                    {{ optional($work->end_time)->format('H:i') ?? '' }}
+                    {{ (optional($time)->after_time && optional($workRequest)->reviewed_at)
+                        ? optional($time->after_time)->format('H:i')
+                        : optional($work->end_time)->format('H:i') ?? '' }}
                 </td>
                 <td class="table__data">
                     {{ $work->totalRestTimeFormat() ?? '' }}

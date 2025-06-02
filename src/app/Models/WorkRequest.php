@@ -18,6 +18,10 @@ class WorkRequest extends Model
         'status',
     ];
 
+    protected $casts = [
+        'reviewed_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -104,13 +104,21 @@ class UserController extends Controller
         ])
         ->orderBy('date', 'asc')->get();
 
-        return view('user.attendance_list', compact('user', 'thisMonth', 'previousMonth', 'nextMonth', 'works'));
+        $workRequest = WorkRequest::with('user')
+        ->where('user_id', $user->id)
+        ->first();
+        $time = WorkRequestTime::with('rest', 'workRequest')
+        ->where('work_request_id', $user->id)
+        ->first();
+
+        return view('user.attendance_list', compact('user', 'thisMonth', 'previousMonth', 'nextMonth', 'works', 'workRequest', 'time'));
     }
 
     public function requestList(Request $request)
     {
         $user = Auth::user();
-        $query = WorkRequest::with('user', 'work', 'times');
+        $query = WorkRequest::with('user', 'work', 'times')
+        ->where('user_id', $user->id);
         $tab = $request->query('tab');
         if ($tab == 'done') {
             $query->where('status', 1);
