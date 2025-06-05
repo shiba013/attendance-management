@@ -35,13 +35,60 @@ class CommonController extends Controller
         ->where('id', $workId)
         ->first();
         $workRequest = WorkRequest::where('work_id', $workId)->first();
-        $time = WorkRequestTime::with('rest', 'workRequest');
+
+        $times = $workRequest
+        ? WorkRequestTime::where('work_request_id', $workRequest->id)->get()
+        : collect();
+
+        $startWorkAfter = optional($times->firstWhere('status', 1))->after_time;
+        $endWorkAfter   = optional($times->firstWhere('status', 2))->after_time;
+
+        $startWork = $startWorkAfter
+        ? $startWorkAfter->format('H:i')
+        : ($work->start_time ? Carbon::parse($work->start_time)->format('H:i') : '');
+
+        $endWork = $endWorkAfter
+        ? $endWorkAfter->format('H:i')
+        : ($work->end_time ? Carbon::parse($work->end_time)->format('H:i') : '');
+
+        $restRequestTimes = [];
+        $startRestNew = '';
+        $endRestNew = '';
+
+        if($workRequest) {
+            $restRequests = $times->whereIn('status', [3, 4])->groupBy('rest_id');
+
+            foreach ($work->rests as $rest) {
+                $restGroup = $restRequests[$rest->id] ?? collect();
+                $startRestAfter = optional($restGroup->firstWhere('status', 3))->after_time ?? null;
+                $endRestAfter = optional($restGroup->firstWhere('status', 4))->after_time ?? null;
+
+                $restRequestTimes[$rest->id] = [
+                    'start_rest' => $startRestAfter
+                    ? $startRestAfter->format('H:i')
+                    : (isset($rest->start_time) ? Carbon::parse($rest->start_time)->format('H:i') : ''),
+                    'end_rest' => $endRestAfter
+                    ? $endRestAfter->format('H:i')
+                    : (isset($rest->end_time) ? Carbon::parse($rest->end_time)->format('H:i') : ''),
+                ];
+            }
+
+            $newStartRest = optional($times->where('rest_id', null)->firstWhere('status', 3))->after_time;
+            $newEndRest   = optional($times->where('rest_id', null)->firstWhere('status', 4))->after_time;
+
+            $restRequestTimes['new'] = [
+                'start_rest' => $newStartRest ? $newStartRest->format('H:i') : '',
+                'end_rest'   => $newEndRest ? $newEndRest->format('H:i') : '',
+            ];
+            $startRestNew = $restRequestTimes['new']['start_rest'] ?? '';
+            $endRestNew = $restRequestTimes['new']['end_rest'] ?? '';
+        }
 
         $loginType = session('login_type');
-        if($loginType === 'admin') {
-            return view('admin.detail', compact('user', 'work', 'workRequest', 'time'));
-        } elseif($loginType === 'user') {
-            return view('user.detail', compact('user', 'work', 'workRequest', 'time'));
+        if ($loginType === 'admin') {
+            return view('admin.detail', compact('user', 'work', 'workRequest', 'startWork', 'endWork', 'restRequestTimes', 'startRestNew', 'endRestNew'));
+        } elseif ($loginType === 'user') {
+            return view('user.detail', compact('user', 'work', 'workRequest', 'startWork', 'endWork', 'restRequestTimes', 'startRestNew', 'endRestNew'));
         }
     }
 
@@ -49,7 +96,7 @@ class CommonController extends Controller
     {
         $loginType = session('login_type');
 
-        if($loginType === 'user') {
+        if ($loginType === 'user') {
             $user = Auth::user();
             $work = Work::with('rests')
             ->where('user_id', $user->id)
@@ -68,145 +115,107 @@ class CommonController extends Controller
             }
 
             if ($request->filled('end_work')) {
-                $this->createRequestTime($workRequest->id, null, 1, $work->end_time, $request->input('end_work'), 'end');
+                $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'), 'end');
             }
 
-            // ③ 休憩時間の修正（複数対応）
             foreach ($work->rests as $index => $rest) {
                 $startInput = $request->input("start_rest.$index");
                 $endInput = $request->input("end_rest.$index");
 
                 if ($startInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 2, $rest->start_time, $startInput, 'start');
+                    $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput, 'start');
                 }
                 if ($endInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->end_time, $endInput, 'end');
+                    $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput, 'end');
                 }
             }
-
-            // ④ 新規追加された休憩の処理
-            $newStart = $request->input("start_rest." . $work->rests->count());
-            $newEnd = $request->input("end_rest." . $work->rests->count());
+            $lastIndex = $work->rests->count();
+            $newStart = $request->input("start_rest.$lastIndex");
+            $newEnd = $request->input("end_rest.$lastIndex");
 
             if ($newStart && $newEnd) {
-                $this->createRequestTime($workRequest->id, null, 2, null, $newStart, 'start');
-                $this->createRequestTime($workRequest->id, null, 3, null, $newEnd, 'end');
+                $this->createRequestTime($workRequest->id, null, 3, null, $newStart, 'start');
+                $this->createRequestTime($workRequest->id, null, 4, null, $newEnd, 'end');
             }
 
-        } elseif($loginType === 'admin') {
+        } elseif ($loginType === 'admin') {
             $user = Auth::user();
             $work = Work::with('rests', 'user')
             ->where('id', $workId)
-            ->get();
+            ->first();
+            $existingRequest = WorkRequest::where('work_id', $workId)->first();
 
-            $workRequest = WorkRequest::create([
-                'work_id' => $workId,
-                'user_id' => $user->id,
-                'remarks' => $request->remarks,
-                'status' => 1,
-                'reviewed_by_user_id' => $user->id,
-                'reviewed_at' => now(),
-            ]);
-        }
-/*
-        // 出勤・退勤
-        if ($work->start_time->format('H:i') !== $request->start_work) {
-            $afterStartWork = Carbon::createFromFormat('Y-m-d H:i', $work->start_time
-            ->format('Y-m-d') . ' ' . $request->start_work);
-            WorkRequestTime::create([
-                'work_request_id' => $workRequest->id,
-                'status' => 1,
-                'before_time' => $work->start_time,
-                'after_time' => $afterStartWork,
-            ]);
-
-        } elseif ($work->end_time->format('H:i') != $request->end_work) {
-            $afterEndWork = Carbon::createFromFormat('Y-m-d H:i', $work->end_time
-            ->format('Y-m-d') . ' ' . $request->end_work);
-            WorkRequestTime::create([
-                'work_request_id' => $workRequest->id,
-                'status' => 0,
-                'before_time' => $work->end_time,
-                'after_time' => $afterEndWork,
-            ]);
-        }
-
-        // 休憩
-        $startRests = $request->input('start_rest', []);
-        $endRests = $request->input('end_rest', []);
-
-        foreach ($work->rests as $index => $rest){
-            $startInput = $startRests[$index] ?? null;
-            $endInput = $endRests[$index] ?? null;
-
-            // 休憩開始
-            if ($startInput && $rest->start_time->format('H:i') !== $startInput) {
-                $afterStartRest = Carbon::createFromFormat('Y-m-d H:i', $rest->start_time
-                ->format('Y-m-d') . ' ' . $startInput);
-                WorkRequestTime::create([
-                    'work_request_id' => $workRequest->id,
-                    'rest_id' => $rest->id,
-                    'status' => 2,
-                    'before_time' => $rest->start_time,
-                    'after_time' => $afterStartRest,
+            if ($existingRequest) {
+                // 既存レコードがある場合は更新でOK？
+                $existingRequest->update([
+                    'status' => 1,
+                    'reviewed_by_user_id' => $user->id,
+                    'reviewed_at' => Carbon::now(),
+                    'remarks' => $request->remarks,
+                ]);
+                $workRequest = $existingRequest;
+            } else {
+                $workRequest = WorkRequest::create([
+                    'work_id' => $workId,
+                    'user_id' => $user->id,
+                    'remarks' => $request->remarks,
+                    'status' => 1,
+                    'reviewed_by_user_id' => $user->id,
+                    'reviewed_at' => Carbon::now(),
                 ]);
             }
-            // 休憩終了
-            if ($endInput && $rest->end_time->format('H:i') !== $endInput) {
-                $afterEndRest = Carbon::createFromFormat('Y-m-d H:i', $rest->end_time
-                ->format('Y-m-d') . ' ' . $endInput);
-                WorkRequestTime::create([
-                    'work_request_id' => $workRequest->id,
-                    'rest_id' => $rest->id,
-                    'status' => 3,
-                    'before_time' => $rest->end_time,
-                    'after_time' => $afterEndRest,
-                ]);
+            if ($request->filled('start_work')) {
+                $this->createRequestTime($workRequest->id, null, 1, $work->start_time, $request->input('start_work'), 'start');
             }
-        }
-        // 新規の休憩
-        for ($i = $work->rests->count(); $i < count($startRests); $i++) {
-            $startInput = $startRests[$i] ?? null;
-            $endInput = $endRests[$i] ?? null;
+            if ($request->filled('end_work')) {
+                $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'), 'end');
+            }
 
-            if ($startInput || $endInput) {
-                $date = $work->date->format('Y-m-d');
-                // 開始
+            foreach ($work->rests as $index => $rest) {
+                $startInput = $request->input("start_rest.$index");
+                $endInput   = $request->input("end_rest.$index");
+
                 if ($startInput) {
-                    $afterStartRest = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $startInput);
-                    WorkRequestTime::create([
-                        'work_request_id' => $workRequest->id,
-                        'rest_id' => null,
-                        'status' => 2,
-                        'before_time' => null,
-                        'after_time' => $afterStartRest,
-                    ]);
+                    $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput, 'start');
                 }
-                // 終了
                 if ($endInput) {
-                    $afterEndRest = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $endInput);
-                    WorkRequestTime::create([
-                        'work_request_id' => $workRequest->id,
-                        'rest_id' => null,
-                        'status' => 3,
-                        'before_time' => null,
-                        'after_time' => $afterEndRest,
-                    ]);
+                    $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput, 'end');
                 }
             }
+            $lastIndex = $work->rests->count();
+            $newStart = $request->input("start_rest.$lastIndex");
+            $newEnd = $request->input("end_rest.$lastIndex");
+            if ($newStart && $newEnd) {
+                $this->createRequestTime($workRequest->id, null, 3, null, $newStart, 'start');
+                $this->createRequestTime($workRequest->id, null, 4, null, $newEnd, 'end');
+            }
         }
-            */
         return redirect("/attendance/{$workId}");
     }
 
     private function createRequestTime($workRequestId, $restId, $status, $beforeTime, $afterTime)
     {
+        $after = Carbon::createFromFormat('H:i', $afterTime);
+
+        if ($beforeTime instanceof Carbon) {
+            $before = $beforeTime->format('H:i');
+        }elseif (is_string($beforeTime)) {
+            $before = Carbon::createFromFormat('H:i:s', $beforeTime)->format('H:i');
+        }else {
+            $before = null;
+        }
+
+        // 前回値と同じであれば登録をスキップ（新規追加以外）
+        if (!is_null($before) && $before === $after->format('H:i')) {
+            return;
+        }
+
         WorkRequestTime::create([
             'work_request_id' => $workRequestId,
             'rest_id' => $restId,
             'status' => $status,
             'before_time' => $beforeTime,
-            'after_time' => Carbon::createFromFormat('H:i', $afterTime),
+            'after_time' => $after,
         ]);
     }
 }

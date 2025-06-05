@@ -76,15 +76,63 @@ class AdminController extends Controller
     {
         $workRequest = WorkRequest::with(['user', 'work.rests', 'times'])
         ->find($workRequestId);
-        $time = WorkRequestTime::with('rest', 'workRequest')
-        ->find('id');
-        return view('admin.approval', compact('workRequest', 'time'));
+        $work = $workRequest ? $workRequest->work : null;
+        $times = $workRequest
+        ? WorkRequestTime::where('work_request_id', $workRequest->id)->get()
+        : collect();
+
+        $startWorkAfter = optional($times->firstWhere('status', 1))->after_time;
+        $endWorkAfter   = optional($times->firstWhere('status', 2))->after_time;
+
+        $startWork = $startWorkAfter
+        ? $startWorkAfter->format('H:i')
+        : ($work->start_time ? Carbon::parse($work->start_time)->format('H:i') : '');
+
+        $endWork = $endWorkAfter
+        ? $endWorkAfter->format('H:i')
+        : ($work->end_time ? Carbon::parse($work->end_time)->format('H:i') : '');
+
+        $restRequestTimes = [];
+        $startRestNew = '';
+        $endRestNew = '';
+
+        if($workRequest) {
+            $restRequests = $times->whereIn('status', [3, 4])->groupBy('rest_id');
+
+            foreach ($work->rests as $rest) {
+                $restGroup = $restRequests[$rest->id] ?? collect();
+                $startRestAfter = optional($restGroup->firstWhere('status', 3))->after_time ?? null;
+                $endRestAfter = optional($restGroup->firstWhere('status', 4))->after_time ?? null;
+
+                $restRequestTimes[$rest->id] = [
+                    'start_rest' => $startRestAfter
+                    ? $startRestAfter->format('H:i')
+                    : (isset($rest->start_time) ? Carbon::parse($rest->start_time)->format('H:i') : ''),
+                    'end_rest' => $endRestAfter
+                    ? $endRestAfter->format('H:i')
+                    : (isset($rest->end_time) ? Carbon::parse($rest->end_time)->format('H:i') : ''),
+                ];
+            }
+
+            $newStartRest = optional($times->where('rest_id', null)->firstWhere('status', 3))->after_time;
+            $newEndRest   = optional($times->where('rest_id', null)->firstWhere('status', 4))->after_time;
+
+            $restRequestTimes['new'] = [
+                'start_rest' => $newStartRest ? $newStartRest->format('H:i') : '',
+                'end_rest'   => $newEndRest ? $newEndRest->format('H:i') : '',
+            ];
+            $startRestNew = $restRequestTimes['new']['start_rest'] ?? '';
+            $endRestNew = $restRequestTimes['new']['end_rest'] ?? '';
+        }
+
+        return view('admin.approval', compact('work', 'workRequest', 'startWork', 'endWork', 'restRequestTimes', 'startRestNew', 'endRestNew'));
     }
 
     public function update(UpdateRequest $request, $workRequestId)
     {
         $workRequest = WorkRequest::with(['user', 'work.rests', 'times'])
         ->find($workRequestId);
+        $work = $workRequest->work;
 
         DB::transaction(function () use ($request, $workRequest) {
             $workRequest->update([
@@ -98,27 +146,36 @@ class AdminController extends Controller
                     $work = $workRequest->work;
 
                     if ($work) {
-                        $work->update([
-                            $time->after_time < $work->start_time ? 'start_time' : 'end_time' => $time->after_time,
-                        ]);
+                        if ($time->type === 1) {
+                            $work->update([
+                                'start_time' => $time->after_time,
+                            ]);
+                        } elseif ($time->type === 2) {
+                            $work->update([
+                                'end_time' => $time->after_time,
+                            ]);
+                        }
                     }
                 }
-
-                if ($time->rest_id && in_array($time->status, [2, 3])) {
+                if ($time->rest_id && in_array($time->status, [3, 4])) {
                     $rest = $time->rest;
                     $rest->update([
-                        $time->status === 2 ? 'start_time' : 'end_time' => $time->after_time,
+                        $time->status === 3 ? 'start_time' : 'end_time' => $time->after_time,
                     ]);
                 }
+            }
+            $startRestNew = optional($workRequest->times->whereNull('rest_id')
+            ->firstWhere('status', 3))->after_time;
+            $endRestNew = optional($workRequest->times->whereNull('rest_id')
+            ->firstWhere('status', 4))->after_time;
 
-                if (!$time->rest_id && in_array($time->status, [2, 3])) {
-                    $newRest = new Rest([
-                        'user_id' => $request->user_id,
-                        'start_time' => $time->status === 2 ? $time->after_time : null,
-                        'end_time' => $time->status === 3 ? $time->after_time : null,
-                    ]);
-                    $request->work->rests()->save($newRest);
-                }
+            if ($startRestNew || $endRestNew) {
+                $newRest = new Rest([
+                    'user_id'    => $workRequest->user_id,
+                    'start_time' => $startRestNew,
+                    'end_time'   => $endRestNew,
+                ]);
+                $work->rests()->save($newRest);
             }
         });
         return redirect("/stamp_correction_request/approve/{$workRequestId}");

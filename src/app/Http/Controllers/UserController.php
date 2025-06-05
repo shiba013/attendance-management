@@ -52,7 +52,7 @@ class UserController extends Controller
             if($work) {
                 $work->update([
                     'end_time' => $now_time,
-                    'status' => 3,
+                    'status' => 2,
                 ]);
             }
 
@@ -65,7 +65,7 @@ class UserController extends Controller
                     'user_id' => $user->id,
                     'start_time' => $now_time,
                 ]);
-                $work->update(['status' => 2]);
+                $work->update(['status' => 3]);
             }
 
         } elseif ($request->has('end_rest')) {
@@ -77,7 +77,7 @@ class UserController extends Controller
                 $rest->update(['end_time' => $now_time]);
                 $work = Work::find($rest->work_id);
                 if($work) {
-                    $work->update(['status' => 1]);
+                    $work->update(['status' => 4]);
                 }
             }
         }

@@ -29,7 +29,7 @@ class WorksTableSeeder extends Seeder
                 'date' => $date->copy()->format('Y-m-d'),
                 'start_time' => $date->copy()->setTime(9, 0),
                 'end_time' => $date->copy()->setTime(18, 0),
-                'status' => 3,
+                'status' => 2,
             ];
         }
         DB::table('works')->insert($works);
@@ -47,7 +47,7 @@ class WorksTableSeeder extends Seeder
                 'date' => $date->copy()->format('Y-m-d'),
                 'start_time' => $date->copy()->setTime(9, 0),
                 'end_time' => $date->copy()->setTime(18, 0),
-                'status' => 3,
+                'status' => 2,
             ];
         }
         DB::table('works')->insert($works);
