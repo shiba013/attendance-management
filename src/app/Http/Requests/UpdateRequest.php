@@ -29,7 +29,7 @@ class UpdateRequest extends FormRequest
             'end_work' => 'nullable |after:start_work',
             'start_rest' => 'nullable |array',
             'end_rest' => 'nullable |array',
-            'start_rest.*' => 'nullable |after:start_work',
+            'start_rest.*' => 'nullable',
             'end_rest.*' => 'nullable |before:end_work',
             'remarks' => 'required',
         ];
@@ -39,7 +39,6 @@ class UpdateRequest extends FormRequest
     {
         return [
             'end_work.after' => '出勤時間もしくは退勤時間が不適切な値です',
-            'start_rest.*.after' => '休憩が勤務時間外です',
             'end_rest.*.before' => '休憩が勤務時間外です',
             'remarks.required' => '備考を記入してください',
         ];
@@ -62,8 +61,12 @@ class UpdateRequest extends FormRequest
                     $startRestTime = Carbon::createFromFormat('H:i', $startRest);
                     $endRestTime = Carbon::createFromFormat('H:i', $endRest);
 
-                    if ($startRestTime->gt($endRestTime)) {
+                    if ($startRestTime->gte($endRestTime)) {
                         $validator->errors()->add("end_rest.$i", '休憩の開始時間もしくは終了時間が不適切な値です');
+                    }
+
+                    if ($startRestTime->lte($startWorkTime)) {
+                        $validator->errors()->add("ned_rest.$i", '休憩が勤務時間外です');
                     }
                 }
             }

@@ -21,9 +21,9 @@ class CommonController extends Controller
     {
         $loginType = session('login_type');
 
-        if ($loginType === 'user') {
+        if($loginType === 'user') {
             return app(UserController::class)->requestList($request);
-        } elseif ($loginType === 'admin') {
+        } elseif($loginType === 'admin') {
             return app(AdminController::class)->adminRequestList($request);
         }
     }
@@ -34,7 +34,9 @@ class CommonController extends Controller
         $work = Work::with('user', 'rests')
         ->where('id', $workId)
         ->first();
-        $workRequest = WorkRequest::where('work_id', $workId)->first();
+        $workRequest = WorkRequest::where('work_id', $workId)
+        ->latest('created_at')
+        ->first();
 
         $times = $workRequest
         ? WorkRequestTime::where('work_request_id', $workRequest->id)->get()
@@ -58,7 +60,7 @@ class CommonController extends Controller
         if($workRequest) {
             $restRequests = $times->whereIn('status', [3, 4])->groupBy('rest_id');
 
-            foreach ($work->rests as $rest) {
+            foreach($work->rests as $rest) {
                 $restGroup = $restRequests[$rest->id] ?? collect();
                 $startRestAfter = optional($restGroup->firstWhere('status', 3))->after_time ?? null;
                 $endRestAfter = optional($restGroup->firstWhere('status', 4))->after_time ?? null;
@@ -73,8 +75,8 @@ class CommonController extends Controller
                 ];
             }
 
-            $newStartRest = optional($times->where('rest_id', null)->firstWhere('status', 3))->after_time;
-            $newEndRest   = optional($times->where('rest_id', null)->firstWhere('status', 4))->after_time;
+            $newStartRest = optional($times->firstWhere('status', 5))->after_time;
+            $newEndRest = optional($times->firstWhere('status', 6))->after_time;
 
             $restRequestTimes['new'] = [
                 'start_rest' => $newStartRest ? $newStartRest->format('H:i') : '',
@@ -85,9 +87,9 @@ class CommonController extends Controller
         }
 
         $loginType = session('login_type');
-        if ($loginType === 'admin') {
+        if($loginType === 'admin') {
             return view('admin.detail', compact('user', 'work', 'workRequest', 'startWork', 'endWork', 'restRequestTimes', 'startRestNew', 'endRestNew'));
-        } elseif ($loginType === 'user') {
+        } elseif($loginType === 'user') {
             return view('user.detail', compact('user', 'work', 'workRequest', 'startWork', 'endWork', 'restRequestTimes', 'startRestNew', 'endRestNew'));
         }
     }
@@ -96,7 +98,7 @@ class CommonController extends Controller
     {
         $loginType = session('login_type');
 
-        if ($loginType === 'user') {
+        if($loginType === 'user') {
             $user = Auth::user();
             $work = Work::with('rests')
             ->where('user_id', $user->id)
@@ -107,45 +109,45 @@ class CommonController extends Controller
                 'work_id' => $workId,
                 'user_id' => $user->id,
                 'remarks' => $request->remarks,
-                'status' => false,
+                'status' => 0,
             ]);
 
-            if ($request->filled('start_work')) {
-                $this->createRequestTime($workRequest->id, null, 1, $work->start_time, $request->input('start_work'), 'start');
+            if($request->filled('start_work')) {
+                $this->createRequestTime($workRequest->id, null, 1, $work->start_time, $request->input('start_work'));
             }
 
-            if ($request->filled('end_work')) {
-                $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'), 'end');
+            if($request->filled('end_work')) {
+                $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'));
             }
 
-            foreach ($work->rests as $index => $rest) {
+            foreach($work->rests as $index => $rest) {
                 $startInput = $request->input("start_rest.$index");
                 $endInput = $request->input("end_rest.$index");
 
-                if ($startInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput, 'start');
+                if($startInput) {
+                    $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput);
                 }
-                if ($endInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput, 'end');
+                if($endInput) {
+                    $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput);
                 }
             }
             $lastIndex = $work->rests->count();
             $newStart = $request->input("start_rest.$lastIndex");
             $newEnd = $request->input("end_rest.$lastIndex");
 
-            if ($newStart && $newEnd) {
-                $this->createRequestTime($workRequest->id, null, 3, null, $newStart, 'start');
-                $this->createRequestTime($workRequest->id, null, 4, null, $newEnd, 'end');
+            if($newStart && $newEnd) {
+                $this->createRequestTime($workRequest->id, null, 5, null, $newStart);
+                $this->createRequestTime($workRequest->id, null, 6, null, $newEnd);
             }
 
-        } elseif ($loginType === 'admin') {
+        } elseif($loginType === 'admin') {
             $user = Auth::user();
             $work = Work::with('rests', 'user')
             ->where('id', $workId)
             ->first();
             $existingRequest = WorkRequest::where('work_id', $workId)->first();
 
-            if ($existingRequest) {
+            if($existingRequest) {
                 // 既存レコードがある場合は更新でOK？
                 $existingRequest->update([
                     'status' => 1,
@@ -164,30 +166,30 @@ class CommonController extends Controller
                     'reviewed_at' => Carbon::now(),
                 ]);
             }
-            if ($request->filled('start_work')) {
-                $this->createRequestTime($workRequest->id, null, 1, $work->start_time, $request->input('start_work'), 'start');
+            if($request->filled('start_work')) {
+                $this->createRequestTime($workRequest->id, null, 1, $work->start_time, $request->input('start_work'));
             }
-            if ($request->filled('end_work')) {
-                $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'), 'end');
+            if($request->filled('end_work')) {
+                $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'));
             }
 
-            foreach ($work->rests as $index => $rest) {
+            foreach($work->rests as $index => $rest) {
                 $startInput = $request->input("start_rest.$index");
                 $endInput   = $request->input("end_rest.$index");
 
-                if ($startInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput, 'start');
+                if($startInput) {
+                    $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput);
                 }
-                if ($endInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput, 'end');
+                if($endInput) {
+                    $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput);
                 }
             }
             $lastIndex = $work->rests->count();
             $newStart = $request->input("start_rest.$lastIndex");
             $newEnd = $request->input("end_rest.$lastIndex");
-            if ($newStart && $newEnd) {
-                $this->createRequestTime($workRequest->id, null, 3, null, $newStart, 'start');
-                $this->createRequestTime($workRequest->id, null, 4, null, $newEnd, 'end');
+            if($newStart && $newEnd) {
+                $this->createRequestTime($workRequest->id, null, 5, null, $newStart);
+                $this->createRequestTime($workRequest->id, null, 6, null, $newEnd);
             }
         }
         return redirect("/attendance/{$workId}");
@@ -197,16 +199,15 @@ class CommonController extends Controller
     {
         $after = Carbon::createFromFormat('H:i', $afterTime);
 
-        if ($beforeTime instanceof Carbon) {
+        if($beforeTime instanceof Carbon) {
             $before = $beforeTime->format('H:i');
-        }elseif (is_string($beforeTime)) {
+        } elseif(is_string($beforeTime)) {
             $before = Carbon::createFromFormat('H:i:s', $beforeTime)->format('H:i');
-        }else {
+        } else {
             $before = null;
         }
 
-        // 前回値と同じであれば登録をスキップ（新規追加以外）
-        if (!is_null($before) && $before === $after->format('H:i')) {
+        if(!is_null($before) && $before === $after->format('H:i')) {
             return;
         }
 
@@ -214,7 +215,7 @@ class CommonController extends Controller
             'work_request_id' => $workRequestId,
             'rest_id' => $restId,
             'status' => $status,
-            'before_time' => $beforeTime,
+            'before_time' => $before,
             'after_time' => $after,
         ]);
     }

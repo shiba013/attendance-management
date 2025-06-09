@@ -28,20 +28,9 @@
                 メール認証を完了してください。
             </h2>
             <div class="verify-email__group">
-                @php
-                $verificationUrl = URL::temporarySignedRoute(
-                    'verification.verify', now()->addMinutes(60),
-                    ['id' => auth()->user()->id, 'hash' => sha1(auth()->user()->email)]
-                );
-                @endphp
-                <button class="auth">
-                    <a href="{{ $verificationUrl }}" class="auth__button">認証はこちらから</a>
-                </button>
-            </div>
-            <div class="verify-email__group">
                 <form action="{{ route('verification.send') }}" method="post" class= "resend-form">
                     @csrf
-                    <input type="submit" value="認証メールを再送する" class="resend-form__link">
+                    <input type="submit" value="認証メールを再送する" class="resend__button">
                 </form>
             </div>
         </div>

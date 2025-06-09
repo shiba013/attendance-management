@@ -17,7 +17,7 @@ class CreateWorkRequestTimesTable extends Migration
             $table->id();
             $table->foreignId('work_request_id')->constrained()->cascadeOnDelete();
             $table->foreignId('rest_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->tinyInteger('status')->comment('0:勤務外, 1:勤務開始, 2:勤務終了, 3:休憩開始, 4:休憩終了');
+            $table->tinyInteger('status')->comment('0:勤務外, 1:勤務開始, 2:勤務終了, 3:休憩開始, 4:休憩終了, 5:新規休憩開始, 6:新規休憩終了');
             $table->dateTime('before_time')->nullable();
             $table->dateTime('after_time')->nullable();
             $table->timestamps();

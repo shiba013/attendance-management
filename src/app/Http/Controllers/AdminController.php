@@ -63,7 +63,7 @@ class AdminController extends Controller
     {
         $query = WorkRequest::with('user', 'work', 'times');
         $tab = $request->query('tab');
-        if ($tab == 'done') {
+        if($tab == 'done') {
             $query->where('status', 1);
         } elseif($tab == '') {
             $query->where('status', 0);
@@ -99,7 +99,7 @@ class AdminController extends Controller
         if($workRequest) {
             $restRequests = $times->whereIn('status', [3, 4])->groupBy('rest_id');
 
-            foreach ($work->rests as $rest) {
+            foreach($work->rests as $rest) {
                 $restGroup = $restRequests[$rest->id] ?? collect();
                 $startRestAfter = optional($restGroup->firstWhere('status', 3))->after_time ?? null;
                 $endRestAfter = optional($restGroup->firstWhere('status', 4))->after_time ?? null;
@@ -113,9 +113,8 @@ class AdminController extends Controller
                     : (isset($rest->end_time) ? Carbon::parse($rest->end_time)->format('H:i') : ''),
                 ];
             }
-
-            $newStartRest = optional($times->where('rest_id', null)->firstWhere('status', 3))->after_time;
-            $newEndRest   = optional($times->where('rest_id', null)->firstWhere('status', 4))->after_time;
+            $newStartRest = optional($times->firstWhere('status', 5))->after_time;
+            $newEndRest   = optional($times->firstWhere('status', 6))->after_time;
 
             $restRequestTimes['new'] = [
                 'start_rest' => $newStartRest ? $newStartRest->format('H:i') : '',
@@ -134,48 +133,61 @@ class AdminController extends Controller
         ->find($workRequestId);
         $work = $workRequest->work;
 
-        DB::transaction(function () use ($request, $workRequest) {
+        DB::transaction(function () use ($request, $workRequest ,$work) {
             $workRequest->update([
-                'status' => true,
+                'status' => 1,
                 'reviewed_by_user_id' => auth()->id(),
                 'reviewed_at' => Carbon::now(),
             ]);
+            $workDate = $work->date->format('Y-m-d');
 
-            foreach (collect($workRequest->times) as $time) {
-                if ($time->status === 1) {
-                    $work = $workRequest->work;
-
-                    if ($work) {
-                        if ($time->type === 1) {
-                            $work->update([
-                                'start_time' => $time->after_time,
-                            ]);
-                        } elseif ($time->type === 2) {
-                            $work->update([
-                                'end_time' => $time->after_time,
-                            ]);
-                        }
-                    }
-                }
-                if ($time->rest_id && in_array($time->status, [3, 4])) {
-                    $rest = $time->rest;
-                    $rest->update([
-                        $time->status === 3 ? 'start_time' : 'end_time' => $time->after_time,
+            foreach(collect($workRequest->times) as $time) {
+                if($time->status === 1 && $work) {
+                    $work->update([
+                        'start_time' => Carbon::parse($time->after_time),
                     ]);
                 }
-            }
-            $startRestNew = optional($workRequest->times->whereNull('rest_id')
-            ->firstWhere('status', 3))->after_time;
-            $endRestNew = optional($workRequest->times->whereNull('rest_id')
-            ->firstWhere('status', 4))->after_time;
+                if($time->status === 2 && $work) {
+                    $work->update([
+                        'end_time' => Carbon::parse($time->after_time),
+                    ]);
+                }
+                if($time->rest_id && in_array($time->status, [3, 4])) {
+                    $rest = $time->rest;
+                    $afterTime = $time->after_time;
+                    $beforeTime = $time->status === 3 ? $rest->start_time : $rest->end_time;
 
-            if ($startRestNew || $endRestNew) {
-                $newRest = new Rest([
-                    'user_id'    => $workRequest->user_id,
-                    'start_time' => $startRestNew,
-                    'end_time'   => $endRestNew,
-                ]);
-                $work->rests()->save($newRest);
+                    if($afterTime && Carbon::parse($beforeTime)->format('H:i') !== Carbon::parse($afterTime)->format('H:i')) {
+                        $rest->update([
+                            $time->status === 3 ? 'start_time' : 'end_time' => $afterTime,
+                        ]);
+                    }
+                }
+            }
+            $startRestNew = optional(
+                $workRequest->times->whereNull('rest_id')->firstWhere('status', 5)
+            )->after_time;
+            $endRestNew = optional(
+                $workRequest->times->whereNull('rest_id')->firstWhere('status', 6)
+            )->after_time;
+
+            if($startRestNew && $endRestNew) {
+                $start = Carbon::parse($startRestNew)->startOfMinute();
+                $end = Carbon::parse($endRestNew)->startOfMinute();
+
+                $exists = $work->rests->contains(function ($rest) use ($start, $end) {
+                    return Carbon::parse($rest->start_time)->startOfMinute()->eq($start) &&
+                    Carbon::parse($rest->end_time)->startOfMinute()->eq($end);
+                });
+
+                if(!$exists) {
+                    $newRest = new Rest([
+                        'user_id' => $workRequest->user_id,
+                        'start_time' => $startRestNew,
+                        'end_time' => $endRestNew,
+                    ]);
+                    $work->rests()->save($newRest);
+                }
             }
         });
         return redirect("/stamp_correction_request/approve/{$workRequestId}");

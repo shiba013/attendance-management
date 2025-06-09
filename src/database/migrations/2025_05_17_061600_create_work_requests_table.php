@@ -20,7 +20,7 @@ class CreateWorkRequestsTable extends Migration
             $table->text('remarks');
             $table->foreignId('reviewed_by_user_id')->nullable()->constrained('users')->cascadeOnDelete();
             $table->dateTime('reviewed_at')->nullable();
-            $table->boolean('status')->default(false)->comment('false:承認待ち, true:承認済み');
+            $table->boolean('status')->default(false)->comment('0:承認待ち, 1:承認済み');
             $table->timestamps();
         });
     }
