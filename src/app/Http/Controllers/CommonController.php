@@ -11,6 +11,7 @@ use App\Models\Rest;
 use App\Models\WorkRequest;
 use App\Models\WorkRequestTime;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 
@@ -111,98 +112,134 @@ class CommonController extends Controller
                 'remarks' => $request->remarks,
                 'status' => 0,
             ]);
-
-            if($request->filled('start_work')) {
-                $this->createRequestTime($workRequest->id, null, 1, $work->start_time, $request->input('start_work'));
-            }
-
-            if($request->filled('end_work')) {
-                $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'));
-            }
-
-            foreach($work->rests as $index => $rest) {
-                $startInput = $request->input("start_rest.$index");
-                $endInput = $request->input("end_rest.$index");
-
-                if($startInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput);
-                }
-                if($endInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput);
-                }
-            }
-            $lastIndex = $work->rests->count();
-            $newStart = $request->input("start_rest.$lastIndex");
-            $newEnd = $request->input("end_rest.$lastIndex");
-
-            if($newStart && $newEnd) {
-                $this->createRequestTime($workRequest->id, null, 5, null, $newStart);
-                $this->createRequestTime($workRequest->id, null, 6, null, $newEnd);
-            }
+            $this->handleRequestTimes($workRequest, $work, $request);
 
         } elseif($loginType === 'admin') {
             $user = Auth::user();
-            $work = Work::with('rests', 'user')
-            ->where('id', $workId)
-            ->first();
-            $existingRequest = WorkRequest::where('work_id', $workId)->first();
 
-            if($existingRequest) {
-                // 既存レコードがある場合は更新でOK？
-                $existingRequest->update([
-                    'status' => 1,
-                    'reviewed_by_user_id' => $user->id,
-                    'reviewed_at' => Carbon::now(),
-                    'remarks' => $request->remarks,
-                ]);
-                $workRequest = $existingRequest;
-            } else {
-                $workRequest = WorkRequest::create([
-                    'work_id' => $workId,
-                    'user_id' => $user->id,
-                    'remarks' => $request->remarks,
-                    'status' => 1,
-                    'reviewed_by_user_id' => $user->id,
-                    'reviewed_at' => Carbon::now(),
-                ]);
-            }
-            if($request->filled('start_work')) {
-                $this->createRequestTime($workRequest->id, null, 1, $work->start_time, $request->input('start_work'));
-            }
-            if($request->filled('end_work')) {
-                $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'));
-            }
+            DB::transaction(function () use ($request, $workId, $user) {
+                $work = Work::with('rests', 'user')
+                ->where('id', $workId)
+                ->first();
+                $existingRequest = WorkRequest::where('work_id', $workId)->first();
 
-            foreach($work->rests as $index => $rest) {
-                $startInput = $request->input("start_rest.$index");
-                $endInput   = $request->input("end_rest.$index");
-
-                if($startInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput);
+                if($existingRequest) {
+                    $existingRequest->update([
+                        'status' => 1,
+                        'reviewed_by_user_id' => $user->id,
+                        'reviewed_at' => Carbon::now(),
+                        'remarks' => $request->remarks,
+                    ]);
+                    $workRequest = $existingRequest;
+                } else {
+                    $workRequest = WorkRequest::create([
+                        'work_id' => $workId,
+                        'user_id' => $user->id,
+                        'remarks' => $request->remarks,
+                        'status' => 1,
+                        'reviewed_by_user_id' => $user->id,
+                        'reviewed_at' => Carbon::now(),
+                    ]);
                 }
-                if($endInput) {
-                    $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput);
+                $this->handleRequestTimes($workRequest, $work, $request);
+
+                $work->update([
+                    'start_time' => $request->filled('start_work') ? Carbon::parse($work->date)->setTimeFromTimeString($request->input('start_work')) : $work->start_time,
+                    'end_time' => $request->filled('end_work') ? Carbon::parse($work->date)->setTimeFromTimeString($request->input('end_work')) : $work->end_time,
+                ]);
+
+                foreach($work->rests as $index => $rest) {
+                    $startRest = WorkRequestTime::where('work_request_id', $workRequest->id)
+                    ->where('rest_id', $rest->id)
+                    ->where('status', 3)
+                    ->value('after_time');
+                    $endRest = WorkRequestTime::where('work_request_id', $workRequest->id)
+                    ->where('rest_id', $rest->id)
+                    ->where('status', 4)
+                    ->value('after_time');
+
+                    $updates = [];
+                    if(($startRest)) {
+                        $newStart = Carbon::parse($work->date)
+                        ->setTimeFromTimeString($startRest)->format('Y-m-d H:i:s');
+                        $currentStart = optional($rest->start_time)->format('Y-m-d H:i:s');
+                        if($newStart !== $currentStart) {
+                            $updates['start_time'] = $newStart;
+                        }
+                    }
+                    if(($endRest)) {
+                        $newEnd = Carbon::parse($work->date)
+                        ->setTimeFromTimeString($endRest)->format('Y-m-d H:i:s');
+                        $currentEnd = optional($rest->end_time)->format('Y-m-d H:i:s');
+                        if($newEnd !== $currentEnd) {
+                            $updates['end_time'] = $newEnd;
+                        }
+                    }
+                    if(!empty($updates)) {
+                        $rest->update($updates);
+                    }
                 }
-            }
-            $lastIndex = $work->rests->count();
-            $newStart = $request->input("start_rest.$lastIndex");
-            $newEnd = $request->input("end_rest.$lastIndex");
-            if($newStart && $newEnd) {
-                $this->createRequestTime($workRequest->id, null, 5, null, $newStart);
-                $this->createRequestTime($workRequest->id, null, 6, null, $newEnd);
-            }
+                $newStart = WorkRequestTime::Where('work_request_id', $workRequest->id)
+                ->where('status', 5)
+                ->value('after_time');
+                $newEnd = WorkRequestTime::where('work_request_id', $workRequest->id)
+                ->where('status', 6)
+                ->value('after_time');
+
+                if($newStart && $newEnd) {
+                    $work->rests()->create([
+                        'user_id' => $work->user_id,
+                        'start_time' => Carbon::parse($work->date)
+                        ->setTimeFromTimeString($newStart),
+                        'end_time' => Carbon::parse($work->date)
+                        ->setTimeFromTimeString($newEnd),
+                    ]);
+                }
+            });
         }
         return redirect("/attendance/{$workId}");
     }
 
-    private function createRequestTime($workRequestId, $restId, $status, $beforeTime, $afterTime)
+    private function handleRequestTimes(WorkRequest $workRequest, Work $work, UpdateRequest $request)
     {
-        $after = Carbon::createFromFormat('H:i', $afterTime);
+        $workDate = $work->date;
+        if($request->filled('start_work')) {
+            $this->createRequestTime($workRequest->id, null, 1, $work->start_time, $request->input('start_work'),  $workDate);
+        }
+        if($request->filled('end_work')) {
+            $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'), $workDate);
+        }
+
+        foreach($work->rests as $index => $rest) {
+            $startInput = $request->input("start_rest.$index");
+            $endInput   = $request->input("end_rest.$index");
+
+            if($startInput) {
+                $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput, $workDate);
+            }
+            if($endInput) {
+                $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput, $workDate);
+            }
+        }
+
+        $lastIndex = $work->rests->count();
+        $newStart = $request->input("start_rest.$lastIndex");
+        $newEnd = $request->input("end_rest.$lastIndex");
+
+        if($newStart && $newEnd) {
+            $this->createRequestTime($workRequest->id, null, 5, null, $newStart, $workDate);
+            $this->createRequestTime($workRequest->id, null, 6, null, $newEnd, $workDate);
+        }
+    }
+
+    private function createRequestTime($workRequestId, $restId, $status, $beforeTime, $afterTime, $workDate)
+    {
+        $after = Carbon::parse($workDate)->setTimeFromTimeString($afterTime);
 
         if($beforeTime instanceof Carbon) {
-            $before = $beforeTime->format('H:i');
+            $before = $beforeTime;
         } elseif(is_string($beforeTime)) {
-            $before = Carbon::createFromFormat('H:i:s', $beforeTime)->format('H:i');
+            $before = Carbon::parse($workDate)->setTimeFromTimeString($beforeTime);
         } else {
             $before = null;
         }

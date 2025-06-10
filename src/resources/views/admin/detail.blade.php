@@ -24,11 +24,21 @@
                 </section>
                 <section class="edit-form__group">
                     <label for="" class="edit-form__label">出勤・退勤</label>
+                    @if(optional($workRequest)->status === null || optional($workRequest)->status === 0)
                     <input type="time" name="start_work" class="edit-form__input"
                     value="{{ old('start_work', optional($work->start_time)->format('H:i')) ?? '' }}">
+                    @elseif(optional($workRequest)->status === 1)
+                    <input type="time" name="start_work" class="edit-form__input"
+                    value="{{ old('start_work', $startWork ?? optional($work->start_time)->format('H:i')) }}">
+                    @endif
                     <span class="edit-form__span">〜</span>
+                    @if(optional($workRequest)->status === null || optional($workRequest)->status === 0)
                     <input type="time" name="end_work" class="edit-form__input"
                     value="{{ old('end_work', optional($work->end_time)->format('H:i')) ?? '' }}">
+                    @elseif(optional($workRequest)->status === 1)
+                    <input type="time" name="end_work" class="edit-form__input"
+                    value="{{ old('end_work', $endWork ?? optional($work->end_time)->format('H:i')) }}">
+                    @endif
                     <p class="alert">
                         @error('end_work')
                         {{ $message }}
@@ -40,15 +50,22 @@
                     <label for="" class="edit-form__label">
                     {{ $loop->first ? '休憩' : '休憩' . $loop->iteration }}
                     </label>
+                    @if(optional($workRequest)->status === null || optional($workRequest)->status === 0)
                     <input type="time" name="start_rest[]" class="edit-form__input"
-                    value="{{ old("start_rest.$index", optional($rest->start_time)->format('H:i')) ?? '' }}">
+                    value="{{ old("start_rest.[$index]", optional($rest->start_time)->format('H:i')) ?? '' }}">
+                    @elseif(optional($workRequest)->status === 1)
+                    <input type="time" name="start_rest[]" class="edit-form__input"
+                    value="{{ old("start_rest.[$index]", $restRequestTimes[$rest->id]['start_rest'] ?? optional($rest->start_time)->format('H:i')) }}">
+                    @endif
                     <span class="edit-form__span">〜</span>
+                    @if(optional($workRequest)->status === null || optional($workRequest)->status === 0)
                     <input type="time" name="end_rest[]" class="edit-form__input"
-                    value="{{ old("end_rest.$index", optional($rest->end_time)->format('H:i')) ?? '' }}">
+                    value="{{ old("end_rest.[$index]", optional($rest->end_time)->format('H:i')) ?? '' }}">
+                    @elseif(optional($workRequest)->status === 1)
+                    <input type="time" name="end_rest[]" class="edit-form__input"
+                    value="{{ old("end_rest.[$index]", $restRequestTimes[$rest->id]['end_rest'] ?? optional($rest->end_time)->format('H:i')) }}">
+                    @endif
                     <p class="alert">
-                        @error("start_rest.$index")
-                        {{ $message }}
-                        @enderror
                         @error("end_rest.$index")
                         {{ $message }}
                         @enderror
@@ -62,15 +79,22 @@
                     <label for="" class="edit-form__label">
                     休憩{{ $lastIndex + 1 }}
                     </label>
+                    @if(optional($workRequest)->status === null || optional($workRequest)->status === 0)
                     <input type="time" name="start_rest[]" class="edit-form__input"
                     value="{{ old("start_rest.$lastIndex") }}" >
+                    @elseif(optional($workRequest)->status === 1)
+                    <input type="time" name="start_rest[]" class="edit-form__input"
+                    value="{{ old("start_rest.$lastIndex") ?? '' }}">
+                    @endif
                     <span class="edit-form__span">〜</span>
+                    @if(optional($workRequest)->status === null || optional($workRequest)->status === 0)
                     <input type="time" name="end_rest[]" class="edit-form__input"
                     value="{{ old("end_rest.$lastIndex") }}">
+                    @elseif(optional($workRequest)->status === 1)
+                    <input type="time" name="end_rest[]" class="edit-form__input"
+                    value="{{ old("end_rest.$lastIndex") ?? '' }}">
+                    @endif
                     <p class="alert">
-                        @error("start_rest.$lastIndex")
-                        {{ $message }}
-                        @enderror
                         @error("end_rest.$lastIndex")
                         {{ $message }}
                         @enderror
@@ -78,7 +102,11 @@
                 </section>
                 <section class="edit-form__group">
                     <label for="" class="edit-form__label">備考</label>
+                    @if(optional($workRequest)->status === null || optional($workRequest)->status === 0)
                     <textarea name="remarks" class="edit-form__text"></textarea>
+                    @elseif(optional($workRequest)->status === 1)
+                    <textarea name="remarks" class="edit-form__text">{{ old('remarks', $workRequest->remarks ?? '') }}</textarea>
+                    @endif
                     <p class="alert__remarks">
                         @error('remarks')
                         {{ $message }}

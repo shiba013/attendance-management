@@ -132,16 +132,17 @@ class AdminController extends Controller
         $workRequest = WorkRequest::with(['user', 'work.rests', 'times'])
         ->find($workRequestId);
         $work = $workRequest->work;
+        $workDate = Carbon::parse($work->date)->format('Y-m-d');
 
-        DB::transaction(function () use ($request, $workRequest ,$work) {
+        DB::transaction(function () use ($request, $workRequest ,$work, $workDate) {
             $workRequest->update([
                 'status' => 1,
                 'reviewed_by_user_id' => auth()->id(),
                 'reviewed_at' => Carbon::now(),
             ]);
-            $workDate = $work->date->format('Y-m-d');
 
             foreach(collect($workRequest->times) as $time) {
+                $afterTime = Carbon::parse($workDate)->setTimeFromTimeString($time->after_time);
                 if($time->status === 1 && $work) {
                     $work->update([
                         'start_time' => Carbon::parse($time->after_time),
@@ -154,12 +155,14 @@ class AdminController extends Controller
                 }
                 if($time->rest_id && in_array($time->status, [3, 4])) {
                     $rest = $time->rest;
-                    $afterTime = $time->after_time;
-                    $beforeTime = $time->status === 3 ? $rest->start_time : $rest->end_time;
+                    $beforeTimeRaw = $time->status === 3 ? $rest->start_time : $rest->end_time;
+                    $beforeTime = Carbon::parse($beforeTimeRaw)->format('H:i');
+                    $afterTimeStr = $time->after_time;
 
-                    if($afterTime && Carbon::parse($beforeTime)->format('H:i') !== Carbon::parse($afterTime)->format('H:i')) {
+                    if($afterTimeStr && $beforeTime !== Carbon::parse($afterTimeStr)->format('H:i')) {
                         $rest->update([
-                            $time->status === 3 ? 'start_time' : 'end_time' => $afterTime,
+                            $time->status === 3 ? 'start_time' : 'end_time'
+                            => Carbon::parse($workDate)->setTimeFromTimeString($afterTimeStr),
                         ]);
                     }
                 }
@@ -172,8 +175,8 @@ class AdminController extends Controller
             )->after_time;
 
             if($startRestNew && $endRestNew) {
-                $start = Carbon::parse($startRestNew)->startOfMinute();
-                $end = Carbon::parse($endRestNew)->startOfMinute();
+                $start = Carbon::parse($workDate)->setTimeFromTimeString($startRestNew)->startOfMinute();
+                $end = Carbon::parse($workDate)->setTimeFromTimeString($endRestNew)->startOfMinute();
 
                 $exists = $work->rests->contains(function ($rest) use ($start, $end) {
                     return Carbon::parse($rest->start_time)->startOfMinute()->eq($start) &&
