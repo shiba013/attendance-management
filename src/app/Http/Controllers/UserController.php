@@ -11,6 +11,7 @@ use App\Models\Rest;
 use App\Models\WorkRequest;
 use App\Models\WorkRequestTime;
 use Illuminate\Support\Carbon;
+use Carbon\CarbonPeriod;
 
 class UserController extends Controller
 {
@@ -96,6 +97,10 @@ class UserController extends Controller
         $previousMonth = $thisMonth->copy()->subMonth()->format('Y-m');
         $nextMonth = $thisMonth->copy()->addMonth()->format('Y-m');
 
+        $dates = collect(CarbonPeriod::create(
+            $thisMonth->copy()->startOfMonth(), $thisMonth->copy()->endOfMonth()
+        ));
+
         $works = Work::with('rests')
         ->where('user_id', $user->id)
         ->whereBetween('date', [
@@ -104,14 +109,17 @@ class UserController extends Controller
         ])
         ->orderBy('date', 'asc')->get();
 
-        $workRequest = WorkRequest::with('user')
-        ->where('user_id', $user->id)
-        ->first();
-        $time = WorkRequestTime::with('rest', 'workRequest')
-        ->where('work_request_id', $user->id)
-        ->first();
-
-        return view('user.attendance_list', compact('user', 'thisMonth', 'previousMonth', 'nextMonth', 'works', 'workRequest', 'time'));
+        $dailyWorks = $dates->map(function ($date) use ($works) {
+            $work = $works->first(function ($w) use ($date) {
+                return Carbon::parse($w->date)->isSameDay($date);
+            });
+            return [
+                'date' => $date,
+                'work' => $work,
+                'id' => optional($work)->id,
+            ];
+        });
+        return view('user.attendance_list', compact('user', 'thisMonth', 'previousMonth', 'nextMonth','works', 'dailyWorks'));
     }
 
     public function requestList(Request $request)

@@ -38,6 +38,7 @@ Route::middleware('auth', 'verified', 'role:1')->group(function ()
     Route::get('/admin/attendance/list', [AdminController::class, 'index']);
     Route::get('/admin/staff/list', [AdminController::class, 'staff']);
     Route::get('/admin/attendance/staff/{id}', [AdminController::class, 'private']);
+    Route::post('/admin/attendance/staff/{id}/export', [AdminController::class, 'export']);
     Route::get('/stamp_correction_request/approve/{attendance_correct_request}', [AdminController::class, 'approve']);
     Route::patch('/stamp_correction_request/approve/{attendance_correct_request}', [AdminController::class, 'update']);
 });

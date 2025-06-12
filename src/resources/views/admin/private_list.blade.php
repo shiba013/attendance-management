@@ -19,8 +19,7 @@
                 {{ $thisMonth->translatedFormat('Y年n月') }}
             </label>
             <input type="month" name="date" id="month" class="calendar__input"
-            value="{{ $thisMonth->translatedFormat('Y年n月') }}">
-            <input type="submit" value="検索" class="calendar__submit">
+            value="{{ $thisMonth->translatedFormat('Y年n月') }}" readonly>
         </form>
         <a href="/admin/attendance/staff/{{ $user->id }}?date={{ $nextMonth }}" class="next-month">
             翌月<img src="{{ asset('icon/arrow.svg') }}" alt="右矢印" class="right-arrow__img">
@@ -36,29 +35,39 @@
                 <th class="table__label">合計</th>
                 <th class="table__label">詳細</th>
             </tr>
-            @foreach($works as $work)
+            @foreach ($dailyWorks as $entry)
+            @php
+            $date = $entry['date'];
+            $work = $entry['work'];
+            $workId = $entry['id'];
+            @endphp
             <tr class="data__row">
                 <td class="table__data">
-                    {{ optional($work->date)->translatedFormat('m/d(D)') ?? '' }}
+                    {{ $date->translatedFormat('m/d(D)') ?? '' }}
                 </td>
                 <td class="table__data">
-                    {{ optional($work->start_time)->format('H:i') ?? '' }}
+                    {{ optional(optional($work)->start_time)->format('H:i') ?? '' }}
                 </td>
                 <td class="table__data">
-                    {{ optional($work->end_time)->format('H:i') ?? '' }}
+                    {{ optional(optional($work)->end_time)->format('H:i') ?? '' }}
                 </td>
                 <td class="table__data">
-                    {{ $work->totalRestTimeFormat() ?? '' }}
+                    {{ optional($work)->totalRestTimeFormat() ?? '' }}
                 </td>
                 <td class="table__data">
-                    {{ $work->totalWorkTimeFormat() ?? '' }}
+                    {{ optional($work)->totalWorkTimeFormat() ?? '' }}
                 </td>
                 <td class="table__data">
-                    <a href="/attendance/{{ $work->id }}" class="data__link">詳細</a>
+                    <a href="/attendance/{{ $workId }}" class="data__link">詳細</a>
                 </td>
             </tr>
             @endforeach
         </table>
+        <form action="/admin/attendance/staff/{{ $user->id }}/export" method="post" class="export-form">
+            @csrf
+            <input type="hidden" name="date" value="{{ request('date') }}">
+            <input type="submit" value="CSV出力" class="export-form__button">
+        </form>
     </div>
 </div>
 @endsection

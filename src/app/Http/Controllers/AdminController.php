@@ -11,7 +11,9 @@ use App\Models\Rest;
 use App\Models\WorkRequest;
 use App\Models\WorkRequestTime;
 use Illuminate\Support\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
@@ -50,18 +52,36 @@ class AdminController extends Controller
         $previousMonth = $thisMonth->copy()->subMonth()->format('Y-m');
         $nextMonth = $thisMonth->copy()->addMonth()->format('Y-m');
 
+        $dates = collect(CarbonPeriod::create(
+            $thisMonth->copy()->startOfMonth(), $thisMonth->copy()->endOfMonth()
+        ));
+
         $works = Work::with('rests')
         ->whereBetween('date', [
             $thisMonth->copy()->startOfMonth(),
             $thisMonth->copy()->endOfMonth(),
         ])
         ->orderBy('date', 'asc')->get();
-        return view('admin.private_list', compact('user', 'thisMonth', 'previousMonth', 'nextMonth', 'works'));
+
+        $dailyWorks = $dates->map(function ($date) use ($works) {
+            $work = $works->first(function ($w) use ($date) {
+                return Carbon::parse($w->date)->isSameDay($date);
+            });
+            return [
+                'date' => $date,
+                'work' => $work,
+                'id' => optional($work)->id,
+            ];
+        });
+        return view('admin.private_list', compact('user', 'thisMonth', 'previousMonth', 'nextMonth', 'works', 'dailyWorks'));
     }
 
     public function adminRequestList(Request $request)
     {
-        $query = WorkRequest::with('user', 'work', 'times');
+        $query = WorkRequest::with('user', 'work', 'times')
+        ->whereHas('user', function ($q) {
+            $q->where('role', 0);
+        });
         $tab = $request->query('tab');
         if($tab == 'done') {
             $query->where('status', 1);
@@ -194,5 +214,43 @@ class AdminController extends Controller
             }
         });
         return redirect("/stamp_correction_request/approve/{$workRequestId}");
+    }
+
+    public function export(Request $request, $userId)
+    {
+        $user = User::find($userId);
+        $month = $request->input('date');
+        $date = $date = $month ? Carbon::parse($month) : Carbon::now();
+        $startOfMonth = $date->copy()->startOfMonth();
+        $endOfMonth = $date->copy()->endOfMonth();
+
+        $works = Work::with('rests')
+        ->where('user_id', $userId)
+        ->whereBetween('date', [$startOfMonth, $endOfMonth])
+        ->get();
+        $columns = ['日付', '出勤', '退勤', '休憩', '合計'];
+
+        $response = new StreamedResponse(function () use ($works, $columns) {
+            $file = fopen('php://output', 'w');
+            mb_convert_variables('SJIS-win', 'UTF-8', $columns);
+            fputcsv($file, $columns);
+
+            foreach ($works as $work) {
+                $row = [
+                    optional($work->date)->format('Y-m-d'),
+                    optional($work->start_time)->format('H:i'),
+                    optional($work->end_time)->format('H:i'),
+                    $work->totalRestTimeFormat() ?? '',
+                    $work->totalWorkTimeFormat() ?? '',
+                ];
+                mb_convert_variables('SJIS-win', 'UTF-8', $row);
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        });
+        $fileName = rawurlencode("{$user->name}_{$date->format('Y-m')}_attendance.csv");
+        $response->headers->set('Content-Type', 'text/csv; charset=Shift_JIS');
+        $response->headers->set('Content-Disposition', "attachment; filename={$fileName}");
+        return $response;
     }
 }
