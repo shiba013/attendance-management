@@ -17,7 +17,7 @@
                 @default 勤務外
             @endswitch
         </p>
-        <p class="attendance__date" id="date">{{ now()->translatedFormat('Y年m月d日(D)') }}</p>
+        <p class="attendance__date" id="date">{{ now()->translatedFormat('Y年n月j日(D)') }}</p>
         <p class="attendance__time" id="time">{{ now()->format('H:i') }}</p>
         @if($status === 0)
         <input type="submit" name="start_work" value="出勤" class="work__button">
@@ -40,8 +40,8 @@
         const jstString = now.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' });
         const jst = new Date(jstString);
         const year = jst.getFullYear();
-        const month = String(jst.getMonth() + 1).padStart(2, '0');
-        const date = String(jst.getDate()).padStart(2, '0');
+        const month = String(jst.getMonth() + 1);
+        const date = String(jst.getDate());
         const day = weekdays[jst.getDay()];
         const hour = String(jst.getHours()).padStart(2, '0');
         const minute = String(jst.getMinutes()).padStart(2, '0');
