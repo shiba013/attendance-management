@@ -37,6 +37,7 @@ class UsersAttendanceListTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         $works = Work::factory()->count(3)->create([
             'user_id' => $user->id,
@@ -69,6 +70,7 @@ class UsersAttendanceListTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         $currentMonth = Carbon::now()->format('Y年n月');
         $date = Carbon::now()->startOfMonth()->format('Y-m-d');
@@ -91,6 +93,7 @@ class UsersAttendanceListTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         $previousMonth = Carbon::now()->subMonth()->format('Y年n月');
         $url = Carbon::now()->subMonth()->format('Y-m');
@@ -115,6 +118,7 @@ class UsersAttendanceListTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         $nextMonth = Carbon::now()->addMonth()->format('Y年n月');
         $url = Carbon::now()->addMonth()->format('Y-m');

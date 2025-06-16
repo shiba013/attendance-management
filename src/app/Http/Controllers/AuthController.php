@@ -51,7 +51,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        if ($loginType === 'admin') {
+        if($loginType === 'admin') {
             return redirect('/admin/login');
         } elseif($loginType === 'user') {
             return redirect('/login');

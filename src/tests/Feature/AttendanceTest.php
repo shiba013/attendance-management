@@ -23,6 +23,7 @@ class AttendanceTest extends TestCase
         Carbon::setTestNow(Carbon::create(2025, 1, 1, 12, 30, 0));
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         $response = $this->get('/attendance');
         $date = '2025年1月1日(水)';
@@ -36,6 +37,7 @@ class AttendanceTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         Work::factory()->create([
             'user_id' => $user->id,
@@ -49,6 +51,7 @@ class AttendanceTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         $this->get('/attendance')->assertSee('勤務外');
     }
@@ -76,6 +79,7 @@ class AttendanceTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         $this->get('/attendance')->assertSee('出勤');
 
@@ -88,6 +92,7 @@ class AttendanceTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         Work::factory()->create([
             'user_id' => $user->id,
@@ -103,6 +108,7 @@ class AttendanceTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+        $this->withSession(['login_type' => 'user']);
 
         $start = Carbon::now()->setTime(9, 0, 0);
         Work::factory()->create([
@@ -118,6 +124,7 @@ class AttendanceTest extends TestCase
     {
         $this->user = User::factory()->create();
         $this->actingAs($this->user);
+        $this->withSession(['login_type' => 'user']);
 
         $this->work = Work::factory()->create([
             'user_id' => $this->user->id,
