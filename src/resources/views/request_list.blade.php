@@ -42,9 +42,9 @@
                     @endif
                 </td>
                 <td class="table__data">{{ $correction->user->name }}</td>
-                <td class="table__data">{{ $correction->work->date->translatedFormat('Y年m月d日')  }}</td>
+                <td class="table__data">{{ $correction->work->date->translatedFormat('Y/m/d')  }}</td>
                 <td class="table__data">{{ $correction->remarks }}</td>
-                <td class="table__data">{{ $correction->created_at->translatedFormat('Y年m月d日') }}</td>
+                <td class="table__data">{{ $correction->created_at->translatedFormat('Y/m/d') }}</td>
                 <td class="table__data">
                     <a href="/attendance/{{ $correction->work_id }}" class="data__link">詳細</a>
                 </td>
@@ -61,9 +61,9 @@
                     @endif
                 </td>
                 <td class="table__data">{{ $correction->user->name }}</td>
-                <td class="table__data">{{ $correction->work->date->translatedFormat('Y年m月d日')  }}</td>
+                <td class="table__data">{{ $correction->work->date->translatedFormat('Y/m/d')  }}</td>
                 <td class="table__data">{{ $correction->remarks }}</td>
-                <td class="table__data">{{ $correction->created_at->translatedFormat('Y年m月d日') }}</td>
+                <td class="table__data">{{ $correction->created_at->translatedFormat('Y/m/d') }}</td>
                 <td class="table__data">
                     <a href="/stamp_correction_request/approve/{{ $correction->id }}" class="data__link">詳細</a>
                 </td>

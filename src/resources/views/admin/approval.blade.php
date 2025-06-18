@@ -11,7 +11,6 @@
     </div>
     <div class="approval">
         <form action="/stamp_correction_request/approve/{{ $workRequest->id }}" method="post" class="approval-form">
-            @method ('patch')
             @csrf
             <div class="approval-form__table">
                 <section class="approval-form__group">

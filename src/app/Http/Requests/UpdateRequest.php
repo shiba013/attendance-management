@@ -66,7 +66,7 @@ class UpdateRequest extends FormRequest
                     }
 
                     if ($startRestTime->lte($startWorkTime)) {
-                        $validator->errors()->add("ned_rest.$i", '休憩が勤務時間外です');
+                        $validator->errors()->add("end_rest.$i", '休憩が勤務時間外です');
                     }
                 }
             }

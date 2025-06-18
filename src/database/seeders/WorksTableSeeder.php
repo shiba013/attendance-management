@@ -18,38 +18,23 @@ class WorksTableSeeder extends Seeder
         $base = Carbon::now()->startOfMonth();
         $startDate = $base->copy()->subMonth()->startOfMonth();
         $endDate = $base->copy()->subMonth()->endOfMonth();
-        $works = [];
-        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-            if ($date->isWeekend()) {
-                continue;
-            }
+        $userIds = [1, 2, 3];
 
-            $works[] = [
-                'user_id' => 1,
-                'date' => $date->copy()->format('Y-m-d'),
-                'start_time' => $date->copy()->setTime(9, 0),
-                'end_time' => $date->copy()->setTime(18, 0),
-                'status' => 2,
-            ];
-        }
-        DB::table('works')->insert($works);
-
-        $base = Carbon::now()->startOfMonth();
-        $startDate = $base->copy()->addMonth()->startOfMonth();
-        $endDate = $base->copy()->addMonth()->endOfMonth();
-        $works = [];
-        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-            if ($date->isWeekend()) {
-                continue;
+        foreach($userIds as $userId) {
+            $works = [];
+            for($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+                if($date->isWeekend()) {
+                    continue;
+                }
+                $works[] = [
+                    'user_id' => $userId,
+                    'date' => $date->copy()->format('Y-m-d'),
+                    'start_time' => $date->copy()->setTime(9, 0),
+                    'end_time' => $date->copy()->setTime(18, 0),
+                    'status' => 2,
+                ];
             }
-            $works[] = [
-                'user_id' => 1,
-                'date' => $date->copy()->format('Y-m-d'),
-                'start_time' => $date->copy()->setTime(9, 0),
-                'end_time' => $date->copy()->setTime(18, 0),
-                'status' => 2,
-            ];
+            DB::table('works')->insert($works);
         }
-        DB::table('works')->insert($works);
     }
 }

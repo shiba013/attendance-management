@@ -18,7 +18,7 @@ class UsersAttendanceListTest extends TestCase
      * @return void
      */
 
-    private function japaneseDate(Carbon $date): string
+    private function japanese_date(Carbon $date): string
     {
         $days = [
             'Sun' => '日',
@@ -33,7 +33,7 @@ class UsersAttendanceListTest extends TestCase
         return $date->format('m/d') . "($day)";
     }
 
-    public function testCanSeeRecords()
+    public function test_can_see_records()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -58,7 +58,7 @@ class UsersAttendanceListTest extends TestCase
 
         $response = $this->get('/attendance/list');
         foreach($works as $work) {
-            $formatDate = $this->japaneseDate($work->date);
+            $formatDate = $this->japanese_date($work->date);
             $response->assertSee($formatDate);
             $response->assertSee($work->start_time->format('H:i'));
             $response->assertSee($work->end_time->format('H:i'));
@@ -66,13 +66,13 @@ class UsersAttendanceListTest extends TestCase
         $response->assertSee($rest);
     }
 
-    public function testCanSeeCurrentMonthList()
+    public function test_can_see_current_month_list()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         $this->withSession(['login_type' => 'user']);
 
-        $currentMonth = Carbon::now()->format('Y年n月');
+        $currentMonth = Carbon::now()->format('Y/m');
         $date = Carbon::now()->startOfMonth()->format('Y-m-d');
 
         Work::factory()->create([
@@ -82,20 +82,20 @@ class UsersAttendanceListTest extends TestCase
             'end_time' => Carbon::now()->setTIme(18, 0),
             'status' => 2,
         ]);
-        $formatDate = $this->japaneseDate(Carbon::parse($date));
+        $formatDate = $this->japanese_date(Carbon::parse($date));
 
         $response = $this->get('/attendance/list');
         $response->assertSee($currentMonth);
         $response->assertSee($formatDate);
     }
 
-    public function testCanSeePreviousMonthList()
+    public function test_can_see_previous_month_list()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         $this->withSession(['login_type' => 'user']);
 
-        $previousMonth = Carbon::now()->subMonth()->format('Y年n月');
+        $previousMonth = Carbon::now()->subMonth()->format('Y/m');
         $url = Carbon::now()->subMonth()->format('Y-m');
         $date = Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d');
 
@@ -106,7 +106,7 @@ class UsersAttendanceListTest extends TestCase
             'end_time' => Carbon::now()->setTime(18, 0),
             'status' => 2,
         ]);
-        $formatDate = $this->japaneseDate(Carbon::parse($date));
+        $formatDate = $this->japanese_date(Carbon::parse($date));
         $this->get('/attendance/list')->assertSee('前月');
 
         $response = $this->get('/attendance/list?date=' . $url);
@@ -114,13 +114,13 @@ class UsersAttendanceListTest extends TestCase
         $response->assertSee($formatDate);
     }
 
-    public function testCanSeeNextMonthList()
+    public function test_can_see_next_month_list()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         $this->withSession(['login_type' => 'user']);
 
-        $nextMonth = Carbon::now()->addMonth()->format('Y年n月');
+        $nextMonth = Carbon::now()->addMonth()->format('Y/m');
         $url = Carbon::now()->addMonth()->format('Y-m');
         $date = Carbon::now()->addMonth()->startOfMonth()->format('Y-m-d');
 
@@ -131,7 +131,7 @@ class UsersAttendanceListTest extends TestCase
             'end_time' => Carbon::now()->setTime(18, 0),
             'status' => 2,
         ]);
-        $formatDate = $this->japaneseDate(Carbon::parse($date));
+        $formatDate = $this->japanese_date(Carbon::parse($date));
         $this->get('/attendance/list')->assertSee('翌月');
 
         $response = $this->get('/attendance/list?date=' . $url);
@@ -139,7 +139,7 @@ class UsersAttendanceListTest extends TestCase
         $response->assertSee($formatDate);
     }
 
-    public function testCanSeeWorkDetail()
+    public function test_can_see_work_detail()
     {
         $user = User::factory()->create();
         $this->actingAs($user);

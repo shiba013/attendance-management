@@ -15,7 +15,7 @@ class RegisterTest extends TestCase
      * @return void
      */
 
-    public function testNameIsRequired()
+    public function test_name_is_required()
     {
         $response = $this->post('/register', [
             'name' => '',
@@ -28,7 +28,7 @@ class RegisterTest extends TestCase
         ]);
     }
 
-    public function testEmailIsRequired()
+    public function test_email_is_required()
     {
         $response = $this->post('/register', [
             'name' => 'テストユーザ',
@@ -41,7 +41,7 @@ class RegisterTest extends TestCase
         ]);
     }
 
-    public function testPasswordIsUnder7Characters()
+    public function test_password_is_under7_characters()
     {
         $response = $this->post('/register', [
             'name' => 'テストユーザ',
@@ -54,7 +54,7 @@ class RegisterTest extends TestCase
         ]);
     }
 
-    public function testPasswordIsMismatch()
+    public function test_password_is_mismatch()
     {
         $response = $this->post('/register', [
             'name' => 'テストユーザ',
@@ -67,7 +67,7 @@ class RegisterTest extends TestCase
         ]);
     }
 
-    public function testPasswordIsRequired()
+    public function test_password_is_required()
     {
         $response = $this->post('/register', [
             'name' => 'テストユーザ',
@@ -80,7 +80,7 @@ class RegisterTest extends TestCase
         ]);
     }
 
-    public function testSuccess()
+    public function test_success()
     {
         $response = $this->post('/register', [
             'name' => 'テストユーザ',

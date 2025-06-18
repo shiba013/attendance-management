@@ -57,6 +57,7 @@ class AdminController extends Controller
         ));
 
         $works = Work::with('rests')
+        ->where('user_id', $userId)
         ->whereBetween('date', [
             $thisMonth->copy()->startOfMonth(),
             $thisMonth->copy()->endOfMonth(),

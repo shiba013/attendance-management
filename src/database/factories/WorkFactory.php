@@ -22,7 +22,7 @@ class WorkFactory extends Factory
         $base = Carbon::now();
         return [
             'user_id' => User::factory(),
-            'date' => $base->copy(),
+            'date' => $base->copy()->format('Y-m-d'),
             'start_time' => $base->copy()->setTime(9, 0),
             'end_time' => $base->copy()->setTime(18, 0),
             'status' => $this->faker->randomElement([1, 2, 3]),

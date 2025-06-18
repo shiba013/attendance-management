@@ -31,10 +31,17 @@ class CommonController extends Controller
 
     public function detail($workId)
     {
+        $loginType = session('login_type');
         $user = Auth::user();
-        $work = Work::with('user', 'rests')
-        ->where('id', $workId)
-        ->first();
+        if($user->role === 1) {
+            $work = Work::with('user', 'rests')
+            ->find($workId);
+        } elseif($user->role === 0) {
+            $work = Work::with('user', 'rests')
+                ->where('id', $workId)
+                ->where('user_id', $user->id)
+                ->first();
+        }
         $workRequest = WorkRequest::where('work_id', $workId)
         ->latest('created_at')
         ->first();
@@ -87,7 +94,6 @@ class CommonController extends Controller
             $endRestNew = $restRequestTimes['new']['end_rest'] ?? '';
         }
 
-        $loginType = session('login_type');
         if($loginType === 'admin') {
             return view('admin.detail', compact('user', 'work', 'workRequest', 'startWork', 'endWork', 'restRequestTimes', 'startRestNew', 'endRestNew'));
         } elseif($loginType === 'user') {

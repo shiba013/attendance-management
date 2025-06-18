@@ -15,7 +15,7 @@
             <div class="edit-form__table">
                 <section class="edit-form__group">
                     <label for="" class="edit-form__label">名前</label>
-                    <p class="edit-form__p">{{ Auth::user()->name }}</p>
+                    <p class="edit-form__p">{{ $user->name }}</p>
                 </section>
                 <section class="edit-form__group">
                     <label for="" class="edit-form__label">日付</label>

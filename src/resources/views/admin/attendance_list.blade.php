@@ -16,7 +16,7 @@
         <form action="/admin/attendance/list" method="get" class="date__search-form">
             <label for="date" class="calendar__label">
                 <img src="{{ asset('icon/calendar.svg') }}" alt="カレンダー" class="calendar__img">
-                {{ $thisDate->translatedFormat('Y年n月j日') }}
+                {{ $thisDate->translatedFormat('Y/m/d') }}
             </label>
             <input type="date" name="date" id="date" class="calendar__input"
             value="{{ request('date') ?? $thisDate->translatedFormat('Y年n月j日') }}">

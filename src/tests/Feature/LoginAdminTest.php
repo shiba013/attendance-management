@@ -14,7 +14,7 @@ class LoginAdminTest extends TestCase
      *
      * @return void
      */
-    public function testEmailIsRequired()
+    public function test_email_is_required()
     {
         $response = $this->post('/admin/login', [
             'email' => '',
@@ -25,7 +25,7 @@ class LoginAdminTest extends TestCase
         ]);
     }
 
-    public function testPasswordIsRequired()
+    public function test_password_is_required()
     {
         $response = $this->post('/admin/login', [
             'email' => 'test@test.com',
@@ -36,7 +36,7 @@ class LoginAdminTest extends TestCase
         ]);
     }
 
-    public function testInformationDiscrepancy()
+    public function test_information_discrepancy()
     {
         $user = User::factory()->create([
             'email' => 'ok@test.com',

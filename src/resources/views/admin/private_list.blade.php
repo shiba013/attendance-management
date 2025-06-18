@@ -16,7 +16,7 @@
         <form action="/admin/attendance/staff/{{ $user->id }}" method="get" class="month__search-form">
             <label for="month" class="calendar__label">
                 <img src="{{ asset('icon/calendar.svg') }}" alt="カレンダー" class="calendar__img">
-                {{ $thisMonth->translatedFormat('Y年n月') }}
+                {{ $thisMonth->translatedFormat('Y/m') }}
             </label>
             <input type="month" name="date" id="month" class="calendar__input"
             value="{{ $thisMonth->translatedFormat('Y年n月') }}" readonly>

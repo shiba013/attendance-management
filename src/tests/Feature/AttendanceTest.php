@@ -18,7 +18,7 @@ class AttendanceTest extends TestCase
      * @return void
      */
     //日時取得機能
-    public function testGetClock()
+    public function test_get_clock()
     {
         Carbon::setTestNow(Carbon::create(2025, 1, 1, 12, 30, 0));
         $user = User::factory()->create();
@@ -33,7 +33,7 @@ class AttendanceTest extends TestCase
     }
 
     //ステータス確認機能
-    private function workStatus($status)
+    private function work_status($status)
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -47,7 +47,7 @@ class AttendanceTest extends TestCase
         return $user;
     }
 
-    public function testStatusIsOff()
+    public function test_status_is_off()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -56,26 +56,26 @@ class AttendanceTest extends TestCase
         $this->get('/attendance')->assertSee('勤務外');
     }
 
-    public function testStatusIsWorking()
+    public function test_status_is_working()
     {
-        $this->workStatus(1);
+        $this->work_status(1);
         $this->get('/attendance')->assertSee('勤務中');
     }
 
-        public function testStatusIsRest()
+        public function test_status_is_rest()
     {
-        $this->workStatus(3);
+        $this->work_status(3);
         $this->get('/attendance')->assertSee('休憩中');
     }
 
-        public function testStatusIsDone()
+        public function test_status_is_done()
     {
-        $this->workStatus(2);
+        $this->work_status(2);
         $this->get('/attendance')->assertSee('退勤済');
     }
 
     //出勤機能
-    public function testStartWork()
+    public function test_start_work()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -88,7 +88,7 @@ class AttendanceTest extends TestCase
         $response->assertSee('勤務中');
     }
 
-    public function testWorkIsOneDay()
+    public function test_work_is_one_day()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -104,7 +104,7 @@ class AttendanceTest extends TestCase
         $this->get('/attendance')->assertDontSee('出勤');
     }
 
-    public function testWorkTimeAppearsInList()
+    public function test_work_time_appears_in_list()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -120,7 +120,7 @@ class AttendanceTest extends TestCase
         $this->get('/attendance/list')->assertSee($start->format('H:i'));
     }
 
-    private function startWork()
+    private function start_work()
     {
         $this->user = User::factory()->create();
         $this->actingAs($this->user);
@@ -135,34 +135,34 @@ class AttendanceTest extends TestCase
     }
 
     //休憩機能
-    public function testStartRest()
+    public function test_start_rest()
     {
-        $this->startWork();
+        $this->start_work();
         $this->get('/attendance')->assertSee('休憩入');
         $this->post('/attendance', ['start_rest' => true]);
         $this->get('/attendance')->assertSee('休憩中');
     }
 
-    public function testCanStartRestMultiple()
+    public function test_can_start_rest_multiple()
     {
-        $this->startWork();
+        $this->start_work();
         $this->post('/attendance', ['start_rest' => true]);
         $this->post('/attendance', ['end_rest' => true]);
         $this->post('/attendance', ['start_rest' => true]);
         $this->get('/attendance')->assertSee('休憩戻');
     }
 
-    public function testEndRest()
+    public function test_end_rest()
     {
-        $this->startWork();
+        $this->start_work();
         $this->post('/attendance', ['start_rest' => true]);
         $this->post('/attendance', ['end_rest' => true]);
         $this->get('/attendance')->assertSee('勤務中');
     }
 
-    public function testEndRestMultiple()
+    public function test_end_rest_multiple()
     {
-        $this->startWork();
+        $this->start_work();
         $this->post('/attendance', ['start_rest' => true]);
         $this->post('/attendance', ['end_rest' => true]);
         $this->post('/attendance', ['start_rest' => true]);
@@ -170,9 +170,9 @@ class AttendanceTest extends TestCase
         $this->get('/attendance')->assertSee('休憩入');
     }
 
-    public function testRestTimeAppearsInList()
+    public function test_rest_time_appears_in_list()
     {
-        $this->startWork();
+        $this->start_work();
         $this->post('/attendance', ['start_rest' => true]);
         $this->post('/attendance', ['end_rest' => true]);
 
@@ -190,17 +190,17 @@ class AttendanceTest extends TestCase
     }
 
     //退勤機能
-    public function testDone()
+    public function test_done()
     {
-        $this->startWork();
+        $this->start_work();
         $this->get('/attendance')->assertSee('退勤');
         $this->post('/attendance', ['end_work' => true]);
         $this->get('/attendance')->assertSee('退勤済');
     }
 
-    public function testDoneTimeAppearsInList()
+    public function test_done_time_appears_in_list()
     {
-        $this->startWork();
+        $this->start_work();
         $end = Carbon::now()->addHours(8)->second(0);
         $this->work->update([
             'end_time' => $end,
