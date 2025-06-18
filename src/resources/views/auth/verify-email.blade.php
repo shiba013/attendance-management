@@ -27,6 +27,7 @@
                 登録していただいたメールアドレスに認証メールを送付しました。<br>
                 メール認証を完了してください。
             </h2>
+            <a href="https://mailtrap.io/home" class="link">認証はこちらから</a>
             <div class="verify-email__group">
                 <form action="{{ route('verification.send') }}" method="post" class= "resend-form">
                     @csrf

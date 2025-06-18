@@ -15,13 +15,30 @@
     text-align: center;
 }
 
-.resend__button {
+.link {
+    display: block;
+    text-align: center;
+    margin: 0px auto;
+    width: 250px;
     text-decoration: none;
-    padding: 10px 15px;
+    padding: 20px 10px;
     border: 1px solid rgba(0, 0, 0, 1);
     border-radius: 10px;
     background-color: rgba(217, 217, 217, 1);
     color: rgba(0, 0, 0, 1);
     font-size: 24px;
     font-weight: 700;
+    cursor: pointer;
+}
+
+.resend__button {
+    text-align: center;
+    margin-top: 50px;
+    text-decoration: none;
+    border: none;
+    background: none;
+    font-weight: 400;
+    font-size: 20px;
+    color: rgba(0, 115, 204, 1);
+    cursor: pointer;
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommonController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
 /*
@@ -42,3 +43,8 @@ Route::middleware('auth', 'verified', 'role:1')->group(function ()
     Route::get('/stamp_correction_request/approve/{attendance_correct_request}', [AdminController::class, 'approve']);
     Route::post('/stamp_correction_request/approve/{attendance_correct_request}', [AdminController::class, 'update']);
 });
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('/attendance');
+})->middleware('auth', 'signed')->name('verification.verify');

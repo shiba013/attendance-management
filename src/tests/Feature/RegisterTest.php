@@ -20,8 +20,8 @@ class RegisterTest extends TestCase
         $response = $this->post('/register', [
             'name' => '',
             'email' => 'test@test.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'password0123',
+            'password_confirmation' => 'password0123',
         ]);
         $response->assertSessionHasErrors([
             'name' => 'お名前を入力してください',

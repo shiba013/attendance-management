@@ -8,14 +8,10 @@ use Laravel\Fortify\Http\Responses\SimpleViewResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use App\Http\Requests\LoginRequest;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Contracts\RegisterResponse;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Laravel\Fortify\Http\Requests\LoginRequest as FortifyLoginRequest;
 
 
