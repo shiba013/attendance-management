@@ -84,7 +84,7 @@ docker-compose exec mysql bash
 ``` bash
 mysql -u root -p
 ```
-3. テスト用データベースの存在を確認
+3. テスト用データベースの存在を確認（データベース名: test）
 ``` bash
 show databases;
 ```
