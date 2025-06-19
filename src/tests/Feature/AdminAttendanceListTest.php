@@ -69,6 +69,13 @@ class AdminAttendanceListTest extends TestCase
         };
     }
 
+    public function test_can_see_today_date()
+    {
+        $response = $this->get('/admin/attendance/list');
+        $response->assertSee(now()->format('Y年n月j日'));
+        $response->assertSee(now()->format('Y/m/d'));
+    }
+
     public function test_can_see_previous_day_attendance()
     {
         $response = $this->get('/admin/attendance/list')
