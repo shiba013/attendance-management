@@ -84,10 +84,14 @@ docker-compose exec mysql bash
 ``` bash
 mysql -u root -p
 ```
-3. テスト用データベースを作成
+3. テスト用データベースの存在を確認
+``` bash
+show databases;
+```
+> 「test」という名前のデータベースが存在する場合は、PHPコンテナへ移動してください。<br>
+> 存在しない場合は、以下のコマンドを実行してテスト用データベースを作成してください。<br>
 ``` bash
 create database test;
-exit;
 ```
 4. PHPコンテナに入る
 ``` bash
