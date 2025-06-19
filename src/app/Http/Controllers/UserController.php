@@ -35,7 +35,7 @@ class UserController extends Controller
         $today = Carbon::now()->format('Y-m-d');
         $now_time = Carbon::now();
 
-        if ($request->has('start_work')) {
+        if($request->has('start_work')) {
             $work = Work::firstOrCreate(
                 [
                     'user_id' => $user->id,
@@ -47,7 +47,7 @@ class UserController extends Controller
                 ],
             );
 
-        } elseif ($request->has('end_work')) {
+        } elseif($request->has('end_work')) {
             $work = Work::where('user_id', $user->id)
             ->where('date', $today)->first();
             if($work) {
@@ -57,7 +57,7 @@ class UserController extends Controller
                 ]);
             }
 
-        } elseif ($request->has('start_rest')) {
+        } elseif($request->has('start_rest')) {
             $work = Work::where('user_id', $user->id)
             ->where('date', $today)->first();
             if($work) {
@@ -69,7 +69,7 @@ class UserController extends Controller
                 $work->update(['status' => 3]);
             }
 
-        } elseif ($request->has('end_rest')) {
+        } elseif($request->has('end_rest')) {
             $rest = Rest::where('user_id', $user->id)
             ->whereNull('end_time')
             ->latest('start_time')
@@ -128,7 +128,7 @@ class UserController extends Controller
         $query = WorkRequest::with('user', 'work', 'times')
         ->where('user_id', $user->id);
         $tab = $request->query('tab');
-        if ($tab == 'done') {
+        if($tab == 'done') {
             $query->where('status', 1);
         } elseif($tab == '') {
             $query->where('status', 0);

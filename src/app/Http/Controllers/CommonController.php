@@ -33,15 +33,17 @@ class CommonController extends Controller
     {
         $loginType = session('login_type');
         $user = Auth::user();
+
         if($user->role === 1) {
             $work = Work::with('user', 'rests')
             ->find($workId);
         } elseif($user->role === 0) {
             $work = Work::with('user', 'rests')
-                ->where('id', $workId)
-                ->where('user_id', $user->id)
-                ->first();
+            ->where('id', $workId)
+            ->where('user_id', $user->id)
+            ->first();
         }
+
         $workRequest = WorkRequest::where('work_id', $workId)
         ->latest('created_at')
         ->first();

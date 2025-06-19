@@ -27,7 +27,7 @@ class AuthController extends Controller
         if(Auth::attempt($user)) {
             $request->session()->regenerate();
             $user = Auth::user();
-            if ($user->role === 1) {
+            if($user->role === 1) {
                 return redirect('/admin/attendance/list');
             } else {
                 Auth::logout();

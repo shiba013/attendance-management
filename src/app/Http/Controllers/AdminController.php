@@ -221,28 +221,34 @@ class AdminController extends Controller
     {
         $user = User::find($userId);
         $month = $request->input('date');
-        $date = $date = $month ? Carbon::parse($month) : Carbon::now();
+        $date = $month ? Carbon::parse($month) : Carbon::now();
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
 
         $works = Work::with('rests')
         ->where('user_id', $userId)
         ->whereBetween('date', [$startOfMonth, $endOfMonth])
-        ->get();
+        ->get()
+        ->keyBy(function ($param) {
+            return Carbon::parse($param->date)->format('Y-m-d');
+        });
         $columns = ['日付', '出勤', '退勤', '休憩', '合計'];
 
-        $response = new StreamedResponse(function () use ($works, $columns) {
+        $response = new StreamedResponse(function () use ($works, $columns, $startOfMonth, $endOfMonth) {
             $file = fopen('php://output', 'w');
             mb_convert_variables('SJIS-win', 'UTF-8', $columns);
             fputcsv($file, $columns);
 
-            foreach ($works as $work) {
+            $period = CarbonPeriod::create($startOfMonth, $endOfMonth);
+            foreach ($period as $day) {
+                $dateFormat = $day->format('Y-m-d');
+                $work = $works->get($dateFormat);
                 $row = [
-                    optional($work->date)->format('Y-m-d'),
-                    optional($work->start_time)->format('H:i'),
-                    optional($work->end_time)->format('H:i'),
-                    $work->totalRestTimeFormat() ?? '',
-                    $work->totalWorkTimeFormat() ?? '',
+                    $dateFormat,
+                    optional(optional($work)->start_time)->format('H:i'),
+                    optional(optional($work)->end_time)->format('H:i'),
+                    optional($work)->totalRestTimeFormat() ?? '',
+                    optional($work)->totalWorkTimeFormat() ?? '',
                 ];
                 mb_convert_variables('SJIS-win', 'UTF-8', $row);
                 fputcsv($file, $row);
