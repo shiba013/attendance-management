@@ -47,7 +47,7 @@ body {
 .date__search-form {
     width: 250px;
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     text-align: center;
     position: relative;
 }
