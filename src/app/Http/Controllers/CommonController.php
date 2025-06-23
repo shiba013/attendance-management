@@ -49,7 +49,8 @@ class CommonController extends Controller
         ->first();
 
         $times = $workRequest
-        ? WorkRequestTime::where('work_request_id', $workRequest->id)->get()
+        ? WorkRequestTime::where('work_request_id', $workRequest->id)
+        ->orderBy('created_at', 'desc')->get()
         : collect();
 
         $startWorkAfter = optional($times->firstWhere('status', 1))->after_time;
@@ -212,21 +213,31 @@ class CommonController extends Controller
     {
         $workDate = $work->date;
         if($request->filled('start_work')) {
-            $this->createRequestTime($workRequest->id, null, 1, $work->start_time, $request->input('start_work'),  $workDate);
+            $afterTime = $request->input('start_work');
+            $beforeTime = optional($work->start_time)->format('H:i');
+            if($beforeTime !== $afterTime) {
+                $this->createRequestTime($workRequest->id, null, 1, $beforeTime, $afterTime, $workDate);
+            }
         }
         if($request->filled('end_work')) {
-            $this->createRequestTime($workRequest->id, null, 2, $work->end_time, $request->input('end_work'), $workDate);
+            $afterTime = $request->input('end_work');
+            $beforeTime = optional($work->end_time)->format('H:i');
+            if($beforeTime !== $afterTime) {
+                $this->createRequestTime($workRequest->id, null, 2, $beforeTime, $afterTime, $workDate);
+            }
         }
 
         foreach($work->rests as $index => $rest) {
             $startInput = $request->input("start_rest.$index");
             $endInput   = $request->input("end_rest.$index");
+            $startBefore = optional($rest->start_time)->format('H:i');
+            $endBefore = optional($rest->end_time)->format('H:i');
 
-            if($startInput) {
-                $this->createRequestTime($workRequest->id, $rest->id, 3, $rest->start_time, $startInput, $workDate);
+            if($startInput && $startInput !== $startBefore) {
+                $this->createRequestTime($workRequest->id, $rest->id, 3, $startBefore, $startInput, $workDate);
             }
-            if($endInput) {
-                $this->createRequestTime($workRequest->id, $rest->id, 4, $rest->end_time, $endInput, $workDate);
+            if($endInput && $endInput !== $endBefore) {
+                $this->createRequestTime($workRequest->id, $rest->id, 4, $endBefore, $endInput, $workDate);
             }
         }
 
@@ -250,10 +261,6 @@ class CommonController extends Controller
             $before = Carbon::parse($workDate)->setTimeFromTimeString($beforeTime);
         } else {
             $before = null;
-        }
-
-        if(!is_null($before) && $before === $after->format('H:i')) {
-            return;
         }
 
         WorkRequestTime::create([
